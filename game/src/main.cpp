@@ -48,7 +48,7 @@ void spawnCircles(std::vector<Circle>& circles)
     int maxY = (SCREEN_HEIGHT - (circle.circleRadius * 2) - 200);
     circle.x = rand() % maxX + circle.circleRadius;
     circle.y = rand() % maxY + (circle.circleRadius * 2.5);
-    circle.circleColor1 = SKYBLUE;
+    circle.circleColor1 = BLUE;
     circle.circleColor2 = BLACK;
     circles.push_back(circle);
 }
@@ -72,7 +72,7 @@ void changeColor(Player& player, Color& lineColor1, std::vector<Circle>& circles
         }
         else
         {
-            c.circleColor1 = SKYBLUE;
+            c.circleColor1 = BLUE;
             c.circleColor2 = BLACK;
         }
     }
