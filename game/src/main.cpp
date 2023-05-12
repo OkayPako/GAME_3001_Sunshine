@@ -1,6 +1,10 @@
 #include "rlImGui.h"
+#include <vector>
+#include <ctime>
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
+
+using namespace std;
 
 class Circle
 {
@@ -9,6 +13,7 @@ public:
     float circleRadius = 40;
     Color circleColor1;
     Color circleColor2;
+    int deleteTimer = 0;
 
     void Draw()
     {
@@ -30,27 +35,68 @@ public:
     }
 };
 
-Circle circle;
+Circle stationaryCircle;
+std::vector<Circle> circles;
 Player player;
+float deltaTime = 1 / 60;
+float circleSpawnTimer = 1.0f;
 
-void changeColor(Circle& circle, Player& player, Color& lineColor1)
+void spawnCircles(std::vector<Circle>& circles)
+{
+    Circle circle;
+    circle.circleRadius = 40;
+    int maxX = SCREEN_WIDTH - circle.circleRadius; // Maximum x-coordinate of circle's center
+    int maxY = (SCREEN_HEIGHT - (circle.circleRadius * 2) - 100);
+    circle.x = rand() % maxX;
+    circle.y = rand() % maxY + 50;
+    circle.circleColor1 = RAYWHITE;
+    circle.circleColor2 = BLACK;
+    circles.push_back(circle);
+}
+
+void changeColor(Player& player, Color& lineColor1, std::vector<Circle>& circles)
 {
     // Collision Detection
-    if (CheckCollisionCircles(Vector2{ circle.x, circle.y }, circle.circleRadius, Vector2{ player.x , player.y }, player.circleRadius))
+    bool collision = false;
+    for (auto& c : circles)
     {
-        lineColor1 = RED;
-        circle.circleColor1 = RED;
-        circle.circleColor2 = BLACK;
-        player.circleColor1 = RED;
-        player.circleColor2 = BLACK;
+        if (CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius))
+        {
+            lineColor1 = RED;
+            c.circleColor1 = RED;
+            c.circleColor2 = BLACK;
+            player.circleColor1 = RED;
+            player.circleColor2 = BLACK;
+            c.deleteTimer = 60;
+            collision = true;
+        }
+        else
+        {
+            c.circleColor1 = RAYWHITE;
+            c.circleColor2 = BLACK;
+        }
     }
-    else
+
+    if (!collision)
     {
         lineColor1 = RAYWHITE;
-        circle.circleColor1 = RAYWHITE;
-        circle.circleColor2 = BLACK;
         player.circleColor1 = LIGHTGRAY;
         player.circleColor2 = BLACK;
+    }
+
+    for (auto it = circles.begin(); it != circles.end();)
+    {
+        auto& c = *it;
+        if (c.deleteTimer > 0)
+        {
+            c.deleteTimer--;
+            if (c.deleteTimer == 0)
+            {
+                it = circles.erase(it);
+                continue;
+            }
+        }
+        ++it;
     }
 }
 
@@ -60,6 +106,7 @@ int main(void)
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Sunshine");
     InitAudioDevice();
     SetTargetFPS(60);
+    srand(time(NULL));
 
     // Loading of Textures/Music
     Texture2D ive = LoadTexture("../game/assets/textures/ive.png");
@@ -76,18 +123,14 @@ int main(void)
     Color lineColor1 = RAYWHITE;
     Color lineColor2 = BLACK;
 
-    // Stationary Circle Traits
-    circle.x = SCREEN_WIDTH / 2;
-    circle.y = SCREEN_HEIGHT / 2;
-    circle.circleColor1 = RAYWHITE;
-    circle.circleColor2 = BLACK;
-
     // Player Circle Traits
     player.circleColor1 = LIGHTGRAY;
     player.circleColor2 = BLACK;
 
     while (!WindowShouldClose())
     {
+        deltaTime = GetFrameTime();
+
         UpdateMusicStream(music);
 
         BeginDrawing();
@@ -121,14 +164,37 @@ int main(void)
         DrawRectangle(20, SCREEN_HEIGHT - 100 - 12, (int)timePlayed, 12, MAROON);
         DrawRectangleLines(20, SCREEN_HEIGHT - 100 - 12, SCREEN_WIDTH - 40, 12, GRAY);
 
-        // Non-moving Circle
-        circle.Draw();
-
         // Player Circle
         player.x = GetMouseX();
         player.y = GetMouseY();
-        changeColor(circle, player, lineColor1);
         player.Draw();
+        circleSpawnTimer -= deltaTime;
+
+        // Enemy Circle
+        if (circleSpawnTimer <= 0)
+        {
+            spawnCircles(circles);
+            circleSpawnTimer = 1.0f;
+        }
+
+        for (auto it = circles.begin(); it != circles.end();)
+        {
+            auto& c = *it;
+            if (c.deleteTimer > 0)
+            {
+                c.deleteTimer--;
+                if (IsKeyPressed(KEY_Z))
+                {
+                    it = circles.erase(it);
+                    continue;
+                }
+            }
+            c.Draw();
+            ++it;
+        }
+
+        // Collision Detection/Color Changer
+        changeColor(player, lineColor1, circles);
 
         EndDrawing();
     }
