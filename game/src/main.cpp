@@ -46,9 +46,9 @@ void spawnCircles(std::vector<Circle>& circles)
     Circle circle;
     circle.circleRadius = 40;
     int maxX = SCREEN_WIDTH - circle.circleRadius; // Maximum x-coordinate of circle's center
-    int maxY = (SCREEN_HEIGHT - (circle.circleRadius * 2) - 100);
+    int maxY = (SCREEN_HEIGHT - (circle.circleRadius * 2) - 150);
     circle.x = rand() % maxX;
-    circle.y = rand() % maxY + 50;
+    circle.y = rand() % maxY;
     circle.circleColor1 = RAYWHITE;
     circle.circleColor2 = BLACK;
     circles.push_back(circle);
