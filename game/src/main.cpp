@@ -4,8 +4,6 @@
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
 
-using namespace std;
-
 class Circle
 {
 public:
@@ -38,28 +36,30 @@ public:
 Circle stationaryCircle;
 std::vector<Circle> circles;
 Player player;
+int score = 0;
 float deltaTime = 1 / 60;
-float circleSpawnTimer = 1.0f;
+float circleSpawnTimer = 0.5082f;
 
 void spawnCircles(std::vector<Circle>& circles)
 {
     Circle circle;
     circle.circleRadius = 40;
-    int maxX = SCREEN_WIDTH - circle.circleRadius; // Maximum x-coordinate of circle's center
-    int maxY = (SCREEN_HEIGHT - (circle.circleRadius * 2) - 150);
-    circle.x = rand() % maxX;
-    circle.y = rand() % maxY;
-    circle.circleColor1 = RAYWHITE;
+    int maxX = SCREEN_WIDTH - (circle.circleRadius * 2);
+    int maxY = (SCREEN_HEIGHT - (circle.circleRadius * 2) - 200);
+    circle.x = rand() % maxX + circle.circleRadius;
+    circle.y = rand() % maxY + (circle.circleRadius * 2.5);
+    circle.circleColor1 = SKYBLUE;
     circle.circleColor2 = BLACK;
     circles.push_back(circle);
 }
 
+// Color change Function when collision is detected
 void changeColor(Player& player, Color& lineColor1, std::vector<Circle>& circles)
 {
-    // Collision Detection
     bool collision = false;
     for (auto& c : circles)
     {
+        // Collision Detection
         if (CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius))
         {
             lineColor1 = RED;
@@ -72,7 +72,7 @@ void changeColor(Player& player, Color& lineColor1, std::vector<Circle>& circles
         }
         else
         {
-            c.circleColor1 = RAYWHITE;
+            c.circleColor1 = SKYBLUE;
             c.circleColor2 = BLACK;
         }
     }
@@ -82,21 +82,6 @@ void changeColor(Player& player, Color& lineColor1, std::vector<Circle>& circles
         lineColor1 = RAYWHITE;
         player.circleColor1 = LIGHTGRAY;
         player.circleColor2 = BLACK;
-    }
-
-    for (auto it = circles.begin(); it != circles.end();)
-    {
-        auto& c = *it;
-        if (c.deleteTimer > 0)
-        {
-            c.deleteTimer--;
-            if (c.deleteTimer == 0)
-            {
-                it = circles.erase(it);
-                continue;
-            }
-        }
-        ++it;
     }
 }
 
@@ -166,7 +151,7 @@ int main(void)
 
         // Player Circle
         player.x = GetMouseX();
-        player.y = GetMouseY();
+        player.y = GetMouseY() + (player.circleRadius/ 2);
         player.Draw();
         circleSpawnTimer -= deltaTime;
 
@@ -174,7 +159,7 @@ int main(void)
         if (circleSpawnTimer <= 0)
         {
             spawnCircles(circles);
-            circleSpawnTimer = 1.0f;
+            circleSpawnTimer = 0.5082f;
         }
 
         for (auto it = circles.begin(); it != circles.end();)
@@ -186,12 +171,15 @@ int main(void)
                 if (IsKeyPressed(KEY_Z))
                 {
                     it = circles.erase(it);
+                    score += 100;
                     continue;
                 }
             }
             c.Draw();
             ++it;
         }
+
+        DrawText(TextFormat("Score: %i", score), 10, 70, 40, LIGHTGRAY);
 
         // Collision Detection/Color Changer
         changeColor(player, lineColor1, circles);
