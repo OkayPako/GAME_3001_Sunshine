@@ -44,6 +44,39 @@ int circlesMissed = 0;
 float deltaTime = 1 / 60;
 float circleSpawnTimer = 0.5082f;
 
+void UI()
+{
+    DrawText("Stream I AM by IVE!", 840, 20, 25, RAYWHITE);
+    DrawText(TextFormat("Score: %i", score), 10, 70, 40, LIGHTGRAY);
+    DrawText(TextFormat("Beats Spawned: %i", circlesSpawned), 1100, 70, 40, LIGHTGRAY);
+    DrawText(TextFormat("Beats Missed: %i", circlesMissed), 1550, 70, 40, LIGHTGRAY);
+}
+
+void input()
+{
+    for (auto it = circles.begin(); it != circles.end();)
+    {
+        Circle& c = *it;
+        c.deleteTimer += 1;
+        if (c.deleteTimer >= 90 && !CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius) && !IsKeyPressed(KEY_Z))
+        {
+            it = circles.erase(it);
+            circlesMissed += 1;
+            score -= 100;
+        }
+        else if (c.deleteTimer < 90 && CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius) && IsKeyPressed(KEY_Z))
+        {
+            it = circles.erase(it);
+            score += 100;
+        }
+        else
+        {
+            it++;
+        }
+        c.Draw();
+    }
+}
+
 void spawnCircles(std::vector<Circle>& circles)
 {
     Circle circle;
@@ -57,7 +90,6 @@ void spawnCircles(std::vector<Circle>& circles)
     circles.push_back(circle);
 }
 
-// Color change Function when collision is detected
 void changeColor(Player& player, Color& lineColor1, std::vector<Circle>& circles)
 {
     bool collision = false;
@@ -145,7 +177,6 @@ int main(void)
         // Non-colliding text and shapes
         DrawRectangleGradientV(0, 1030, 1920, 50, lineColor1, lineColor2);
         DrawRectangleGradientV(0, 10, 1920, 50, lineColor2, lineColor1);
-        DrawText("Stream I AM by IVE!", 840, 20, 25, RAYWHITE);
 
         // Get timePlayed scaled to bar dimensions
         timePlayed = GetMusicTimePlayed(music) / GetMusicTimeLength(music) * (SCREEN_WIDTH - 40);
@@ -167,33 +198,10 @@ int main(void)
             circleSpawnTimer = 0.5082f;
         }
 
-        for (auto it = circles.begin(); it != circles.end();)
-        {
-            Circle& c = *it;
-            c.deleteTimer += 1;
-            if (c.deleteTimer >= 90 && !CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius) && !IsKeyPressed(KEY_Z))
-            {
-                it = circles.erase(it);
-                circlesMissed += 1;
-                score -= 100;
-            }
-            else if (c.deleteTimer < 90 && CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius) && IsKeyPressed(KEY_Z))
-            {
-                it = circles.erase(it);
-                score += 100;
-            }
-            else
-            {
-                it++;
-            }
-            c.Draw();
-        }
+        UI();
 
-        DrawText(TextFormat("Score: %i", score), 10, 70, 40, LIGHTGRAY);
-        DrawText(TextFormat("Beats Spawned: %i", circlesSpawned), 1100, 70, 40, LIGHTGRAY);
-        DrawText(TextFormat("Beats Missed: %i", circlesMissed), 1550, 70, 40, LIGHTGRAY);
+        input();
 
-        // Collision Detection/Color Changer
         changeColor(player, lineColor1, circles);
 
         EndDrawing();
