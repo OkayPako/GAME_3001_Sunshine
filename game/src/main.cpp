@@ -59,7 +59,7 @@ void changeColor(Player& player, Color& lineColor1, std::vector<Circle>& circles
     bool collision = false;
     for (auto& c : circles)
     {
-        // Collision Detection
+        // Collision Detection (Center of circle 1, Radius of Circle 1, Center of circle 2, Radius of circle 2)
         if (CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius))
         {
             lineColor1 = RED;
@@ -89,8 +89,8 @@ int main(void)
 {
     // Window/Audio initialization
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Sunshine");
-    InitAudioDevice();
     SetTargetFPS(60);
+    InitAudioDevice();
     srand(time(NULL));
 
     // Loading of Textures/Music
@@ -101,7 +101,7 @@ int main(void)
     // Looping/Playing/Volume/Time played and pause of music
     music.looping = true;
     PlayMusicStream(music);
-    float volume = 0.1f;
+    float volume = 0.2f;
     bool pause = false;
 
     // Line Color
@@ -123,7 +123,7 @@ int main(void)
         ClearBackground(BLACK);
 
         // Music Volume and play/pause
-        if (IsKeyDown(KEY_SPACE))
+        if (IsKeyPressed(KEY_SPACE))
         {
             pause = !pause;
 
