@@ -84,7 +84,7 @@ void spawnCircles(std::vector<Circle>& circles)
     int maxX = SCREEN_WIDTH - (circle.circleRadius * 2);
     int maxY = (SCREEN_HEIGHT - (circle.circleRadius * 2) - 200);
     circle.x = rand() % maxX + circle.circleRadius;
-    circle.y = rand() % maxY + (circle.circleRadius * 2.5);
+    circle.y = rand() % maxY + (circle.circleRadius * 4);
     circle.circleColor1 = BLUE;
     circle.circleColor2 = BLACK;
     circles.push_back(circle);
@@ -174,6 +174,10 @@ int main(void)
         // Background Texture
         DrawTexture(ive, 0, 0, RAYWHITE);
 
+        UI();
+
+        input();
+
         // Non-colliding text and shapes
         DrawRectangleGradientV(0, 1030, 1920, 50, lineColor1, lineColor2);
         DrawRectangleGradientV(0, 10, 1920, 50, lineColor2, lineColor1);
@@ -197,10 +201,6 @@ int main(void)
             circlesSpawned += 1;
             circleSpawnTimer = 0.5082f;
         }
-
-        UI();
-
-        input();
 
         changeColor(player, lineColor1, circles);
 
