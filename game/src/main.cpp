@@ -1,3 +1,5 @@
+// Raphael Flores 101139370
+
 #include "rlImGui.h"
 #include <vector>
 #include <ctime>
@@ -37,6 +39,8 @@ Circle stationaryCircle;
 std::vector<Circle> circles;
 Player player;
 int score = 0;
+int circlesSpawned = 0;
+int circlesMissed = 0;
 float deltaTime = 1 / 60;
 float circleSpawnTimer = 0.5082f;
 
@@ -67,7 +71,7 @@ void changeColor(Player& player, Color& lineColor1, std::vector<Circle>& circles
             c.circleColor2 = BLACK;
             player.circleColor1 = RED;
             player.circleColor2 = BLACK;
-            c.deleteTimer = 60;
+            //c.deleteTimer = 60;
             collision = true;
         }
         else
@@ -159,27 +163,35 @@ int main(void)
         if (circleSpawnTimer <= 0)
         {
             spawnCircles(circles);
+            circlesSpawned += 1;
             circleSpawnTimer = 0.5082f;
         }
 
         for (auto it = circles.begin(); it != circles.end();)
         {
-            auto& c = *it;
-            if (c.deleteTimer > 0)
+            Circle& c = *it;
+            c.deleteTimer += 1;
+            if (c.deleteTimer >= 90 && !CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius) && !IsKeyPressed(KEY_Z))
             {
-                c.deleteTimer--;
-                if (IsKeyPressed(KEY_Z))
-                {
-                    it = circles.erase(it);
-                    score += 100;
-                    continue;
-                }
+                it = circles.erase(it);
+                circlesMissed += 1;
+                score -= 100;
+            }
+            else if (c.deleteTimer < 90 && CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius) && IsKeyPressed(KEY_Z))
+            {
+                it = circles.erase(it);
+                score += 100;
+            }
+            else
+            {
+                it++;
             }
             c.Draw();
-            ++it;
         }
 
         DrawText(TextFormat("Score: %i", score), 10, 70, 40, LIGHTGRAY);
+        DrawText(TextFormat("Beats Spawned: %i", circlesSpawned), 1100, 70, 40, LIGHTGRAY);
+        DrawText(TextFormat("Beats Missed: %i", circlesMissed), 1550, 70, 40, LIGHTGRAY);
 
         // Collision Detection/Color Changer
         changeColor(player, lineColor1, circles);
