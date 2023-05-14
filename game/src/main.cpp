@@ -71,12 +71,11 @@ void changeColor(Player& player, Color& lineColor1, std::vector<Circle>& circles
             c.circleColor2 = BLACK;
             player.circleColor1 = RED;
             player.circleColor2 = BLACK;
-            //c.deleteTimer = 60;
             collision = true;
         }
         else
         {
-            c.circleColor1 = BLUE;
+            c.circleColor1 = VIOLET;
             c.circleColor2 = BLACK;
         }
     }
@@ -84,16 +83,17 @@ void changeColor(Player& player, Color& lineColor1, std::vector<Circle>& circles
     if (!collision)
     {
         lineColor1 = RAYWHITE;
-        player.circleColor1 = LIGHTGRAY;
-        player.circleColor2 = BLACK;
+        player.circleColor1 = BLANK;
+        player.circleColor2 = RAYWHITE;
     }
 }
 
 int main(void)
 {
     // Window/Audio initialization
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Sunshine");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Ive-SU(?)");
     SetTargetFPS(60);
+    HideCursor();
     InitAudioDevice();
     srand(time(NULL));
 
@@ -113,8 +113,8 @@ int main(void)
     Color lineColor2 = BLACK;
 
     // Player Circle Traits
-    player.circleColor1 = LIGHTGRAY;
-    player.circleColor2 = BLACK;
+    player.circleColor1 = BLANK;
+    player.circleColor2 = RAYWHITE;
 
     while (!WindowShouldClose())
     {
