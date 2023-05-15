@@ -41,7 +41,7 @@ Player player;
 int score = 0;
 int circlesSpawned = 0;
 int circlesMissed = 0;
-float deltaTime = 1 / 60;
+float deltaTime = 1 / 120;
 float circleSpawnTimer = 0.5082f;
 
 void UI()
