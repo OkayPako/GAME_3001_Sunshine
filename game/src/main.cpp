@@ -174,10 +174,6 @@ int main(void)
         // Background Texture
         DrawTexture(ive, 0, 0, RAYWHITE);
 
-        UI();
-
-        input();
-
         // Non-colliding text and shapes
         DrawRectangleGradientV(0, 1030, 1920, 50, lineColor1, lineColor2);
         DrawRectangleGradientV(0, 10, 1920, 50, lineColor2, lineColor1);
@@ -201,6 +197,10 @@ int main(void)
             circlesSpawned += 1;
             circleSpawnTimer = 0.5082f;
         }
+
+        UI();
+
+        input();
 
         changeColor(player, lineColor1, circles);
 
