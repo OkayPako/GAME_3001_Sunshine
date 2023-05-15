@@ -58,13 +58,13 @@ void input()
     {
         Circle& c = *it;
         c.deleteTimer += 1;
-        if (c.deleteTimer >= 90 && !CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius) && !IsKeyPressed(KEY_Z))
+        if (c.deleteTimer >= 120 && !CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius) && !IsKeyPressed(KEY_Z))
         {
             it = circles.erase(it);
             circlesMissed += 1;
             score -= 100;
         }
-        else if (c.deleteTimer < 90 && CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius) && IsKeyPressed(KEY_Z))
+        else if (c.deleteTimer < 120 && CheckCollisionCircles(Vector2{ c.x, c.y }, c.circleRadius, Vector2{ player.x , player.y }, player.circleRadius) && IsKeyPressed(KEY_Z))
         {
             it = circles.erase(it);
             score += 100;
@@ -124,7 +124,7 @@ int main(void)
 {
     // Window/Audio initialization
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Ive-SU(?)");
-    SetTargetFPS(60);
+    SetTargetFPS(120);
     HideCursor();
     InitAudioDevice();
     srand(time(NULL));
