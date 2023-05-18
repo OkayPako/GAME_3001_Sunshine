@@ -200,6 +200,8 @@ int main(void)
 
         UI();
 
+        DrawFPS(25, 150);
+
         input();
 
         changeColor(player, lineColor1, circles);
