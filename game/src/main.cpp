@@ -98,7 +98,7 @@ int main()
     std::vector<Agent> agents;
     Agent agent1;
     agent1.rigidbody.position = { 100, 100 };
-    agent1.sprite.texture = LoadTexture("IVE.png");
+    agent1.sprite.texture = LoadTexture("../game/assets/textures/goldfish.png");
     agent1.sprite.bounds = { 100, 100 };
     agent1.maxSpeed = 100.0f;
     agent1.maxAcceleration = 200.0f;
