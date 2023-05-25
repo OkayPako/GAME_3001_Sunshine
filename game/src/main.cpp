@@ -1,5 +1,6 @@
 #include "rlImGui.h"
 #include "raylib.h"
+#include "Math.h"
 #include <vector>
 #include <cmath>
 
@@ -45,38 +46,38 @@ public:
     float maxSpeed;
     float maxAcceleration;
 
-    Vector2 Add(const Vector2& v1, const Vector2& v2)
-    {
-        return { v1.x + v2.x, v1.y + v2.y };
-    }
-
-    Vector2 Subtract(const Vector2& v1, const Vector2& v2)
-    {
-        return { v1.x - v2.x, v1.y - v2.y };
-    }
-
-    float Length(const Vector2& vector)
-    {
-        return std::sqrt(vector.x * vector.x + vector.y * vector.y);
-    }
-
-    Vector2 Normalize(const Vector2& vector)
-    {
-        float length = Length(vector);
-        if (length != 0)
-        {
-            return { vector.x / length, vector.y / length };
-        }
-        else
-        {
-            return { 0, 0 };
-        }
-    }
-
-    Vector2 Scale(const Vector2& vector, float scalar)
-    {
-        return { vector.x * scalar, vector.y * scalar };
-    }
+    //Vector2 Add(const Vector2& v1, const Vector2& v2)
+    //{
+    //    return { v1.x + v2.x, v1.y + v2.y };
+    //}
+    //
+    //Vector2 Subtract(const Vector2& v1, const Vector2& v2)
+    //{
+    //    return { v1.x - v2.x, v1.y - v2.y };
+    //}
+    //
+    //float Length(const Vector2& vector)
+    //{
+    //    return std::sqrt(vector.x * vector.x + vector.y * vector.y);
+    //}
+    //
+    //Vector2 Normalize(const Vector2& vector)
+    //{
+    //    float length = Length(vector);
+    //    if (length != 0)
+    //    {
+    //        return { vector.x / length, vector.y / length };
+    //    }
+    //    else
+    //    {
+    //        return { 0, 0 };
+    //    }
+    //}
+    //
+    //Vector2 Scale(const Vector2& vector, float scalar)
+    //{
+    //    return { vector.x * scalar, vector.y * scalar };
+    //}
 
     void Update(float deltaTime)
     {
@@ -249,10 +250,10 @@ int main()
             agent.rigidbody.velocity.y += agentAcceleration.y * deltaTime;
 
             // Clamp velocity to max speed
-            float agentSpeed = agent.Length(agent.rigidbody.velocity);
+            float agentSpeed = Length(agent.rigidbody.velocity);
             if (agentSpeed > agent.maxSpeed)
             {
-                agent.rigidbody.velocity = agent.Scale(agent.rigidbody.velocity, agent.maxSpeed / agentSpeed);
+                agent.rigidbody.velocity = Scale(agent.rigidbody.velocity, agent.maxSpeed / agentSpeed);
             }
 
             // Update agent
