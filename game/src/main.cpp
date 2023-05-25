@@ -272,7 +272,7 @@ int main()
         // Draw objects to flee from
         for (const Vector2& objectPosition : objectsToFlee)
         {
-            DrawCircle(objectPosition.x, objectPosition.y, 10, RED);
+            DrawCircle(objectPosition.x, objectPosition.y, 10, BROWN);
         }
 
         EndDrawing();
