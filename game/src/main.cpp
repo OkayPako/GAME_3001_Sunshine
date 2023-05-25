@@ -6,7 +6,7 @@
 const int screenWidth = 1280;
 const int screenHeight = 720;
 
-class Sprite 
+class Sprite
 {
 public:
     Texture2D texture;
@@ -14,30 +14,30 @@ public:
     int width;
     int height;
 
-    void SetWidth(int w) 
+    void SetWidth(int w)
     {
         width = w;
     }
 
-    void SetHeight(int h) 
+    void SetHeight(int h)
     {
         height = h;
     }
 
-    void Draw() const 
+    void Draw() const
     {
         DrawTexturePro(texture, { 0, 0, (float)texture.width, (float)texture.height }, { position.x, position.y, (float)width, (float)height }, { 0, 0 }, 0.0f, WHITE);
     }
 };
 
-class Rigidbody 
+class Rigidbody
 {
 public:
     Vector2 position;
     Vector2 velocity;
 };
 
-class Agent 
+class Agent
 {
 public:
     Rigidbody rigidbody;
@@ -45,64 +45,69 @@ public:
     float maxSpeed;
     float maxAcceleration;
 
-    Vector2 Subtract(const Vector2& v1, const Vector2& v2) 
+    Vector2 Add(const Vector2& v1, const Vector2& v2)
+    {
+        return { v1.x + v2.x, v1.y + v2.y };
+    }
+
+    Vector2 Subtract(const Vector2& v1, const Vector2& v2)
     {
         return { v1.x - v2.x, v1.y - v2.y };
     }
 
-    float Length(const Vector2& vector) 
+    float Length(const Vector2& vector)
     {
         return std::sqrt(vector.x * vector.x + vector.y * vector.y);
     }
 
-    Vector2 Normalize(const Vector2& vector) 
+    Vector2 Normalize(const Vector2& vector)
     {
         float length = Length(vector);
-        if (length != 0) 
+        if (length != 0)
         {
             return { vector.x / length, vector.y / length };
         }
-        else 
+        else
         {
             return { 0, 0 };
         }
     }
 
-    Vector2 Scale(const Vector2& vector, float scalar) 
+    Vector2 Scale(const Vector2& vector, float scalar)
     {
         return { vector.x * scalar, vector.y * scalar };
     }
 
-    void Update(float deltaTime) 
+    void Update(float deltaTime)
     {
         rigidbody.position.x += rigidbody.velocity.x * deltaTime;
         rigidbody.position.y += rigidbody.velocity.y * deltaTime;
 
         // Check screen bounds
-        if (rigidbody.position.x < 0) 
+        if (rigidbody.position.x < 0)
         {
             rigidbody.position.x = 0;
             rigidbody.velocity.x = 0;
         }
-        else if (rigidbody.position.x > screenWidth - sprite.width) 
+        else if (rigidbody.position.x > screenWidth - sprite.width)
         {
             rigidbody.position.x = screenWidth - sprite.width;
             rigidbody.velocity.x = 0;
         }
 
-        if (rigidbody.position.y < 0) 
+        if (rigidbody.position.y < 0)
         {
             rigidbody.position.y = 0;
             rigidbody.velocity.y = 0;
         }
-        else if (rigidbody.position.y > screenHeight - sprite.height) 
+        else if (rigidbody.position.y > screenHeight - sprite.height)
         {
             rigidbody.position.y = screenHeight - sprite.height;
             rigidbody.velocity.y = 0;
         }
     }
 
-    Vector2 Seek(const Vector2& targetPosition) 
+    Vector2 Seek(const Vector2& targetPosition)
     {
         Vector2 desiredVelocity = Subtract(targetPosition, rigidbody.position);
         desiredVelocity = Normalize(desiredVelocity);
@@ -115,7 +120,7 @@ public:
         return steering;
     }
 
-    Vector2 Flee(const Vector2& targetPosition) 
+    Vector2 Flee(const Vector2& targetPosition)
     {
         Vector2 desiredVelocity = Subtract(rigidbody.position, targetPosition);
         desiredVelocity = Normalize(desiredVelocity);
@@ -128,24 +133,62 @@ public:
         return steering;
     }
 
-    float Clamp(float value, float min, float max) 
+    Vector2 FleeFromObjects(const Vector2& targetPosition, const Vector2& mousePosition, const std::vector<Vector2>& objectPositions)
     {
-        if (value < min) 
+        // Calculate desired velocity to flee from target position
+        Vector2 desiredVelocity = Subtract(rigidbody.position, targetPosition);
+        desiredVelocity = Normalize(desiredVelocity);
+        desiredVelocity = Scale(desiredVelocity, maxSpeed);
+
+        // Calculate steering force to flee from objects and mouse position
+        Vector2 objectSteering = { 0, 0 };
+        for (const Vector2& objectPosition : objectPositions)
+        {
+            Vector2 objectVelocity = Subtract(objectPosition, rigidbody.position); // Calculate velocity away from the object
+            float objectDistance = Length(objectVelocity);
+            if (objectDistance < 200.0f) // Flee from objects within a certain distance
+            {
+                objectVelocity = Normalize(objectVelocity);
+                objectVelocity = Scale(objectVelocity, maxSpeed);
+                objectVelocity = Scale(objectVelocity, 1.0f - (objectDistance / 200.0f));
+                objectSteering = Add(objectSteering, objectVelocity); // Add object steering to the total steering
+            }
+        }
+
+        Vector2 mouseSteering = Subtract(rigidbody.position, mousePosition);
+        mouseSteering = Normalize(mouseSteering);
+        mouseSteering = Scale(mouseSteering, maxSpeed);
+
+        // Combine desired velocity, object steering, and mouse steering
+        Vector2 steering = Subtract(desiredVelocity, rigidbody.velocity);
+        steering.x = Clamp(steering.x, -maxAcceleration, maxAcceleration);
+        steering.y = Clamp(steering.y, -maxAcceleration, maxAcceleration);
+
+        // Add object steering and mouse steering to the total steering
+        steering = Add(steering, objectSteering);
+        steering = Add(steering, mouseSteering);
+
+        return steering;
+    }
+
+    float Clamp(float value, float min, float max)
+    {
+        if (value < min)
         {
             return min;
         }
-        else if (value > max) 
+        else if (value > max)
         {
             return max;
         }
-        else 
+        else
         {
             return value;
         }
     }
 };
 
-int main() 
+int main()
 {
     InitWindow(screenWidth, screenHeight, "Seek and Flee");
 
@@ -156,33 +199,50 @@ int main()
     agent.rigidbody.position = { 400, 225 };
     agent.rigidbody.velocity = { 0, 0 };
     agent.sprite.texture = LoadTexture("../game/assets/textures/magikarp.png");
-    agent.sprite.SetWidth(100);
-    agent.sprite.SetHeight(100);
+    agent.sprite.SetWidth(50);
+    agent.sprite.SetHeight(50);
     agent.sprite.position = agent.rigidbody.position;
     agent.maxSpeed = 400.0f;
     agent.maxAcceleration = 800.0f;
     agents.push_back(agent);
 
+    // Create objects to flee from
+    std::vector<Vector2> objectsToFlee;
+    objectsToFlee.push_back({ 200, 200 });
+    objectsToFlee.push_back({ 600, 400 });
+    objectsToFlee.push_back({ 800, 100 });
+
     SetTargetFPS(60);
 
-    while (!WindowShouldClose()) 
+    while (!WindowShouldClose())
     {
         // Update
         float deltaTime = GetFrameTime();
 
         // Handle agent behavior
-        for (Agent& agent : agents) 
+        for (Agent& agent : agents)
         {
             Vector2 mousePosition = GetMousePosition();
+            std::vector<Vector2> objectPositions;
 
-            Vector2 agentAcceleration;
-            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) 
+            // Add object positions to the vector
+            for (const Vector2& objectPosition : objectsToFlee)
             {
+                objectPositions.push_back(objectPosition);
+            }
+
+            Vector2 agentAcceleration = { 0, 0 };
+
+            // Check if left mouse button is pressed
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+            {
+                // Seek towards the mouse position
                 agentAcceleration = agent.Seek(mousePosition);
             }
-            else 
+            else
             {
-                agentAcceleration = agent.Flee(mousePosition);
+                // Flee from the cursor position and objects
+                agentAcceleration = agent.FleeFromObjects(mousePosition, mousePosition, objectPositions);
             }
 
             agent.rigidbody.velocity.x += agentAcceleration.x * deltaTime;
@@ -190,7 +250,7 @@ int main()
 
             // Clamp velocity to max speed
             float agentSpeed = agent.Length(agent.rigidbody.velocity);
-            if (agentSpeed > agent.maxSpeed) 
+            if (agentSpeed > agent.maxSpeed)
             {
                 agent.rigidbody.velocity = agent.Scale(agent.rigidbody.velocity, agent.maxSpeed / agentSpeed);
             }
@@ -201,19 +261,25 @@ int main()
         }
 
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(SKYBLUE);
 
         // Draw agents
-        for (const Agent& agent : agents) 
+        for (const Agent& agent : agents)
         {
             agent.sprite.Draw();
+        }
+
+        // Draw objects to flee from
+        for (const Vector2& objectPosition : objectsToFlee)
+        {
+            DrawCircle(objectPosition.x, objectPosition.y, 10, RED);
         }
 
         EndDrawing();
     }
 
     // Unload resources
-    for (Agent& agent : agents) 
+    for (Agent& agent : agents)
     {
         UnloadTexture(agent.sprite.texture);
     }
