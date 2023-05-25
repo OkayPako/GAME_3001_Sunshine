@@ -168,6 +168,30 @@ int main()
 
     while (!WindowShouldClose())
     {
+        // This is all in the while loop
+
+        //Vector2 targetPosition;
+        //Vector2 position { 100,100 };
+        //Vector2 velocity = { 10.0, 0.0 };
+        //Vector2 acceleration = { 10.0f, 0.0f };
+        
+        // 1. Do displacement first
+        // 2. Update the position of the target
+        // 3. Update the velocity accordingly
+        
+        // Vector2 displacement = velocity * deltaTime;
+        
+        // acceleration = (position2 - position1) / deltaTime; // This will make the bottom line make sense.
+        // position = position + velocity * deltaTime (we have displacement to represent this) + 0.5f * a * deltaTime * deltaTime; // updating position 
+        // position = position + displacement + 0.5f * acceleration * deltaTime * deltaTime;
+        
+        // v = v + a * deltaTime; // updating velocity
+        // velocity = velocity + acceleration * deltaTime; // This is position2 = position1 + acceleration * deltaTime;
+
+        // DrawCricleV(position, 50, BLACK);
+        // DrawLineV(position, position + velocity, RED);
+        // DrawLineV(position, position + acceleration, GREEN);
+
         // Update
         float deltaTime = GetFrameTime();
 
