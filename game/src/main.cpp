@@ -116,29 +116,14 @@ public:
         return steering;
     }
 
-    //Vector2 Flee(const Vector2& targetPosition) // Calculates the steering force for an agent to move away from a target position.
-    //{
-    //    // The desired velocity is calculated by subtracting the targetPosition from the agent's current position (rigidbody.position). 
-    //    // This creates a vector pointing away from the target.
-    //    Vector2 desiredVelocity = Normalize(rigidbody.position - targetPosition) * maxSpeed;
-    //
-    //    Vector2 steering = Clamp(desiredVelocity - rigidbody.velocity, -maxAcceleration, maxAcceleration);
-    //
-    //    return steering;
-    //}
-
-    Vector2 Flee(const Vector2& targetPosition, const std::vector<Vector2>& objectPositions)
+    Vector2 Flee(const Vector2& targetPosition) // Calculates the steering force for an agent to move away from a target position.
     {
+        // The desired velocity is calculated by subtracting the targetPosition from the agent's current position (rigidbody.position). 
+        // This creates a vector pointing away from the target.
         Vector2 desiredVelocity = Normalize(rigidbody.position - targetPosition) * maxSpeed;
-
-        for (const Vector2& objectPosition : objectPositions)
-        {
-            // Calculate a steering force to flee from each object
-            desiredVelocity = desiredVelocity + Normalize(rigidbody.position - objectPosition) * maxSpeed;
-        }
-
+    
         Vector2 steering = Clamp(desiredVelocity - rigidbody.velocity, -maxAcceleration, maxAcceleration);
-
+    
         return steering;
     }
 };
@@ -187,11 +172,9 @@ int main()
             }
             else
             {
-                //// Flee from the cursor position
-                //agentAcceleration = agent.Flee(mousePosition);
+                // Flee from the cursor position
+                agentAcceleration = agent.Flee(mousePosition);
 
-                // Flee from the mouse position and objects
-                agentAcceleration = agent.Flee(mousePosition, objectPositions);
             }
             
             agent.rigidbody.velocity.x += agentAcceleration.x * deltaTime;
