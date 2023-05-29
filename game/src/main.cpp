@@ -191,16 +191,17 @@ int main()
             else
             {
                 // Flee from the cursor position
-                // Vector2 fleeFromAgent = agent->Flee(agent->rigidbody.position, agent->rigidbody.position);
+                Vector2 fleeFromAgent = agent->Flee(agent->rigidbody.position, agent->rigidbody.position);
                 Vector2 fleeFromMouse = agent->Flee(agent->rigidbody.position, mousePosition);
 
+                // Flee from the object positions
                 Vector2 fleeFromObjects = { 0, 0 };
                 for (const Vector2& objectPosition : objectPositions)
                 {
                     fleeFromObjects = fleeFromObjects + agent->Flee(agent->rigidbody.position, objectPosition);
                 }
 
-                agentAcceleration = fleeFromMouse + fleeFromObjects; // fleeFromAgent + 
+                agentAcceleration = fleeFromAgent + fleeFromMouse + fleeFromObjects;
             }
             
             agent->rigidbody.velocity.x += agentAcceleration.x * deltaTime;
