@@ -116,14 +116,23 @@ public:
         return steering;
     }
 
-    Vector2 Flee(const Vector2& targetPosition) // Calculates the steering force for an agent to move away from a target position.
+    Vector2 Flee(const Vector2& targetPosition) // Calculates the steering force for an agent to move away from a target position and the objects.
     {
         // The desired velocity is calculated by subtracting the targetPosition from the agent's current position (rigidbody.position). 
         // This creates a vector pointing away from the target.
         Vector2 desiredVelocity = Normalize(rigidbody.position - targetPosition) * maxSpeed;
-    
+
         Vector2 steering = Clamp(desiredVelocity - rigidbody.velocity, -maxAcceleration, maxAcceleration);
-    
+
+        return steering;
+    }
+
+    Vector2 Flee(const Vector2& agentPosition, const Vector2& targetPosition)
+    {
+        Vector2 desiredVelocity = Normalize(agentPosition - targetPosition) * maxSpeed;
+
+        Vector2 steering = Clamp(desiredVelocity - rigidbody.velocity, -maxAcceleration, maxAcceleration);
+
         return steering;
     }
 };
@@ -131,6 +140,11 @@ public:
 int main()
 {
     InitWindow(screenWidth, screenHeight, "Seek and Flee");
+
+    // Background
+    Texture2D sea = LoadTexture("../game/assets/textures/sea.png");
+    sea.width = 1280;
+    sea.height = 720;
 
     std::vector<Agent*> agents;
     Agent* agent;
@@ -177,7 +191,16 @@ int main()
             else
             {
                 // Flee from the cursor position
-                agentAcceleration = agent->Flee(mousePosition);
+                // Vector2 fleeFromAgent = agent->Flee(agent->rigidbody.position, agent->rigidbody.position);
+                Vector2 fleeFromMouse = agent->Flee(agent->rigidbody.position, mousePosition);
+
+                Vector2 fleeFromObjects = { 0, 0 };
+                for (const Vector2& objectPosition : objectPositions)
+                {
+                    fleeFromObjects = fleeFromObjects + agent->Flee(agent->rigidbody.position, objectPosition);
+                }
+
+                agentAcceleration = fleeFromMouse + fleeFromObjects; // fleeFromAgent + 
             }
             
             agent->rigidbody.velocity.x += agentAcceleration.x * deltaTime;
@@ -202,6 +225,9 @@ int main()
         BeginDrawing();
         ClearBackground(SKYBLUE);
 
+        // Draw Background
+        DrawTexture(sea, 0, 0, RAYWHITE);
+        
         // Draw agents
         for (const Agent* agent : agents)
         {
@@ -211,7 +237,7 @@ int main()
         // Draw objects to flee from
         for (const Vector2& objectPosition : objectsToFlee)
         {
-            DrawCircle(objectPosition.x, objectPosition.y, 10, BROWN);
+            DrawCircle(objectPosition.x, objectPosition.y, 10, BEIGE);
         }
 
         EndDrawing();
