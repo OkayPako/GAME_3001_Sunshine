@@ -132,10 +132,14 @@ int main()
 {
     InitWindow(screenWidth, screenHeight, "Seek and Flee");
 
-    std::vector<Agent> agents;
+    std::vector<Agent*> agents;
+    Agent* agent;
 
     // Create agent using the constructor
-    Agent agent({ 400, 225 }, LoadTexture("../game/assets/textures/magikarp.png"), 50, 50, 400.0f, 800.0f);
+    agent = (new Agent ({ 400, 225 }, LoadTexture("../game/assets/textures/magikarp.png"), 50, 50, 200.0f, 400.0f));
+    agents.push_back(agent);
+
+    agent = (new Agent ({ 600, 275 }, LoadTexture("../game/assets/textures/magikarp.png"), 50, 50, 400.0f, 400.0f));
     agents.push_back(agent);
 
     // Create objects to flee from
@@ -152,7 +156,7 @@ int main()
         float deltaTime = GetFrameTime();
 
         // Handle agent behavior
-        for (Agent& agent : agents)
+        for (Agent* agent : agents)
         {
             Vector2 mousePosition = GetMousePosition();
             Vector2 agentAcceleration = { 0, 0 };
@@ -168,41 +172,40 @@ int main()
             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
             {
                 // Seek towards the mouse position
-                agentAcceleration = agent.Seek(mousePosition);
+                agentAcceleration = agent->Seek(mousePosition);
             }
             else
             {
                 // Flee from the cursor position
-                agentAcceleration = agent.Flee(mousePosition);
-
+                agentAcceleration = agent->Flee(mousePosition);
             }
             
-            agent.rigidbody.velocity.x += agentAcceleration.x * deltaTime;
-            agent.rigidbody.velocity.y += agentAcceleration.y * deltaTime;
+            agent->rigidbody.velocity.x += agentAcceleration.x * deltaTime;
+            agent->rigidbody.velocity.y += agentAcceleration.y * deltaTime;
 
             // Clamp velocity to max speed
-            float agentSpeed = Length(agent.rigidbody.velocity); // This function calculates the magnitude or length of a vector.
-            if (agentSpeed > agent.maxSpeed)
+            float agentSpeed = Length(agent->rigidbody.velocity); // This function calculates the magnitude or length of a vector.
+            if (agentSpeed > agent->maxSpeed)
             {
                 // This function scales (or multiplies) a vector by a scalar value. 
                 // Scale(agent.rigidbody.velocity, agent.maxSpeed / agentSpeed) scales the agent.rigidbody.velocity vector by a factor of agent.maxSpeed / agentSpeed. 
                 // This operation adjusts the magnitude of the velocity vector to ensure it does not exceed the maximum speed (agent.maxSpeed).
                 // This is us updating the new speed after the seek and flee functions are used.
-                agent.rigidbody.velocity = Scale(agent.rigidbody.velocity, agent.maxSpeed / agentSpeed); 
+                agent->rigidbody.velocity = Scale(agent->rigidbody.velocity, agent->maxSpeed / agentSpeed);
             }
 
             // Update agent
-            agent.Update(deltaTime);
-            agent.sprite.position = agent.rigidbody.position;
+            agent->Update(deltaTime);
+            agent->sprite.position = agent->rigidbody.position;
         }
 
         BeginDrawing();
         ClearBackground(SKYBLUE);
 
         // Draw agents
-        for (const Agent& agent : agents)
+        for (const Agent* agent : agents)
         {
-            agent.sprite.Draw();
+            agent->sprite.Draw();
         }
 
         // Draw objects to flee from
@@ -215,9 +218,9 @@ int main()
     }
 
     // Unload resources
-    for (Agent& agent : agents)
+    for (Agent* agent : agents)
     {
-        UnloadTexture(agent.sprite.texture);
+        UnloadTexture(agent->sprite.texture);
     }
 
     CloseWindow();
