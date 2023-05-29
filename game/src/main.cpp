@@ -1,3 +1,27 @@
+// This is all in the while loop
+
+//Vector2 targetPosition;
+//Vector2 position { 100,100 };
+//Vector2 velocity = { 10.0, 0.0 };
+//Vector2 acceleration = { 10.0f, 0.0f };
+
+// 1. Do displacement first
+// 2. Update the position of the target
+// 3. Update the velocity accordingly
+
+// Vector2 displacement = velocity * deltaTime;
+
+// acceleration = (position2 - position1) / deltaTime; // This will make the bottom line make sense.
+// position = position + velocity * deltaTime (we have displacement to represent this) + 0.5f * a * deltaTime * deltaTime; // updating position 
+// position = position + displacement + 0.5f * acceleration * deltaTime * deltaTime;
+
+// v = v + a * deltaTime; // updating velocity
+// velocity = velocity + acceleration * deltaTime; // This is position2 = position1 + acceleration * deltaTime;
+
+// DrawCricleV(position, 50, BLACK);
+// DrawLineV(position, position + velocity, RED);
+// DrawLineV(position, position + acceleration, GREEN);
+
 #include "rlImGui.h"
 #include "raylib.h"
 #include "Math.h"
@@ -14,16 +38,6 @@ public:
     Vector2 position;
     int width;
     int height;
-
-    void SetWidth(int w)
-    {
-        width = w;
-    }
-
-    void SetHeight(int h)
-    {
-        height = h;
-    }
 
     void Draw() const
     {
@@ -45,6 +59,19 @@ public:
     Sprite sprite;
     float maxSpeed;
     float maxAcceleration;
+
+    // Constructor
+    Agent(const Vector2& position, const Texture2D& texture, int width, int height, float speed, float acceleration)
+        : maxSpeed(speed)
+        , maxAcceleration(acceleration)
+    {
+        rigidbody.position = position;
+        rigidbody.velocity = { 0, 0 };
+        sprite.texture = texture;
+        sprite.width = width;
+        sprite.height = height;
+        sprite.position = position;
+    }
 
     void Update(float deltaTime)
     {
@@ -75,66 +102,42 @@ public:
         }
     }
 
-    Vector2 Seek(const Vector2& targetPosition)
+    Vector2 Seek(const Vector2& targetPosition) // Calculates the steering force for an agent to move towards a target position.
     {
-        Vector2 desiredVelocity = Subtract(targetPosition, rigidbody.position);
-        desiredVelocity = Normalize(desiredVelocity);
-        desiredVelocity = Scale(desiredVelocity, maxSpeed);
+        // The desired velocity is calculated by subtracting the agent's current position (rigidbody.position) from the targetPosition and then normalizing the resulting vector. 
+        // Normalizing a vector means scaling it to have a magnitude of 1 while preserving its direction.
+        // Multiplying the normalized vector by maxSpeed determines the magnitude of the desired velocity.
+        Vector2 desiredVelocity = Normalize(targetPosition - rigidbody.position) * maxSpeed; 
 
-        Vector2 steering = Subtract(desiredVelocity, rigidbody.velocity);
-        steering.x = Clamp(steering.x, -maxAcceleration, maxAcceleration);
-        steering.y = Clamp(steering.y, -maxAcceleration, maxAcceleration);
+        // The steering force is then clamped or limited between -maxAcceleration and maxAcceleration using the Clamp function. 
+        // This ensures that the agent's acceleration does not exceed the maximum allowed acceleration.
+        Vector2 steering = Clamp(desiredVelocity - rigidbody.velocity, -maxAcceleration, maxAcceleration);
 
         return steering;
     }
 
-    Vector2 Flee(const Vector2& targetPosition)
+    //Vector2 Flee(const Vector2& targetPosition) // Calculates the steering force for an agent to move away from a target position.
+    //{
+    //    // The desired velocity is calculated by subtracting the targetPosition from the agent's current position (rigidbody.position). 
+    //    // This creates a vector pointing away from the target.
+    //    Vector2 desiredVelocity = Normalize(rigidbody.position - targetPosition) * maxSpeed;
+    //
+    //    Vector2 steering = Clamp(desiredVelocity - rigidbody.velocity, -maxAcceleration, maxAcceleration);
+    //
+    //    return steering;
+    //}
+
+    Vector2 Flee(const Vector2& targetPosition, const std::vector<Vector2>& objectPositions)
     {
-        Vector2 desiredVelocity = Subtract(rigidbody.position, targetPosition);
-        desiredVelocity = Normalize(desiredVelocity);
-        desiredVelocity = Scale(desiredVelocity, maxSpeed);
+        Vector2 desiredVelocity = Normalize(rigidbody.position - targetPosition) * maxSpeed;
 
-        Vector2 steering = Subtract(desiredVelocity, rigidbody.velocity);
-        steering.x = Clamp(steering.x, -maxAcceleration, maxAcceleration);
-        steering.y = Clamp(steering.y, -maxAcceleration, maxAcceleration);
-
-        return steering;
-    }
-
-    Vector2 FleeFromObjects(const Vector2& targetPosition, const Vector2& mousePosition, const std::vector<Vector2>& objectPositions)
-    {
-        // Calculate desired velocity to flee from target position
-        Vector2 desiredVelocity = Subtract(rigidbody.position, targetPosition);
-        desiredVelocity = Normalize(desiredVelocity);
-        desiredVelocity = Scale(desiredVelocity, maxSpeed);
-
-        // Calculate steering force to flee from objects and mouse position
-        Vector2 objectSteering = { 0, 0 };
         for (const Vector2& objectPosition : objectPositions)
         {
-            Vector2 objectVelocity = Subtract(objectPosition, rigidbody.position); // Calculate velocity away from the object
-            float objectDistance = Length(objectVelocity);
-            if (objectDistance < 200.0f) // Flee from objects within a certain distance
-            {
-                objectVelocity = Normalize(objectVelocity);
-                objectVelocity = Scale(objectVelocity, maxSpeed);
-                objectVelocity = Scale(objectVelocity, 1.0f - (objectDistance / 200.0f));
-                objectSteering = Add(objectSteering, objectVelocity); // Add object steering to the total steering
-            }
+            // Calculate a steering force to flee from each object
+            desiredVelocity = desiredVelocity + Normalize(rigidbody.position - objectPosition) * maxSpeed;
         }
 
-        Vector2 mouseSteering = Subtract(rigidbody.position, mousePosition);
-        mouseSteering = Normalize(mouseSteering);
-        mouseSteering = Scale(mouseSteering, maxSpeed);
-
-        // Combine desired velocity, object steering, and mouse steering
-        Vector2 steering = Subtract(desiredVelocity, rigidbody.velocity);
-        steering.x = Clamp(steering.x, -maxAcceleration, maxAcceleration);
-        steering.y = Clamp(steering.y, -maxAcceleration, maxAcceleration);
-
-        // Add object steering and mouse steering to the total steering
-        steering = Add(steering, objectSteering);
-        steering = Add(steering, mouseSteering);
+        Vector2 steering = Clamp(desiredVelocity - rigidbody.velocity, -maxAcceleration, maxAcceleration);
 
         return steering;
     }
@@ -146,16 +149,8 @@ int main()
 
     std::vector<Agent> agents;
 
-    // Create agent
-    Agent agent;
-    agent.rigidbody.position = { 400, 225 };
-    agent.rigidbody.velocity = { 0, 0 };
-    agent.sprite.texture = LoadTexture("../game/assets/textures/magikarp.png");
-    agent.sprite.SetWidth(50);
-    agent.sprite.SetHeight(50);
-    agent.sprite.position = agent.rigidbody.position;
-    agent.maxSpeed = 400.0f;
-    agent.maxAcceleration = 800.0f;
+    // Create agent using the constructor
+    Agent agent({ 400, 225 }, LoadTexture("../game/assets/textures/magikarp.png"), 50, 50, 400.0f, 800.0f);
     agents.push_back(agent);
 
     // Create objects to flee from
@@ -168,30 +163,6 @@ int main()
 
     while (!WindowShouldClose())
     {
-        // This is all in the while loop
-
-        //Vector2 targetPosition;
-        //Vector2 position { 100,100 };
-        //Vector2 velocity = { 10.0, 0.0 };
-        //Vector2 acceleration = { 10.0f, 0.0f };
-        
-        // 1. Do displacement first
-        // 2. Update the position of the target
-        // 3. Update the velocity accordingly
-        
-        // Vector2 displacement = velocity * deltaTime;
-        
-        // acceleration = (position2 - position1) / deltaTime; // This will make the bottom line make sense.
-        // position = position + velocity * deltaTime (we have displacement to represent this) + 0.5f * a * deltaTime * deltaTime; // updating position 
-        // position = position + displacement + 0.5f * acceleration * deltaTime * deltaTime;
-        
-        // v = v + a * deltaTime; // updating velocity
-        // velocity = velocity + acceleration * deltaTime; // This is position2 = position1 + acceleration * deltaTime;
-
-        // DrawCricleV(position, 50, BLACK);
-        // DrawLineV(position, position + velocity, RED);
-        // DrawLineV(position, position + acceleration, GREEN);
-
         // Update
         float deltaTime = GetFrameTime();
 
@@ -199,15 +170,14 @@ int main()
         for (Agent& agent : agents)
         {
             Vector2 mousePosition = GetMousePosition();
-            std::vector<Vector2> objectPositions;
+            Vector2 agentAcceleration = { 0, 0 };
 
             // Add object positions to the vector
+            std::vector<Vector2> objectPositions;
             for (const Vector2& objectPosition : objectsToFlee)
             {
                 objectPositions.push_back(objectPosition);
             }
-
-            Vector2 agentAcceleration = { 0, 0 };
 
             // Check if left mouse button is pressed
             if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
@@ -217,18 +187,25 @@ int main()
             }
             else
             {
-                // Flee from the cursor position and objects
-                agentAcceleration = agent.FleeFromObjects(mousePosition, mousePosition, objectPositions);
-            }
+                //// Flee from the cursor position
+                //agentAcceleration = agent.Flee(mousePosition);
 
+                // Flee from the mouse position and objects
+                agentAcceleration = agent.Flee(mousePosition, objectPositions);
+            }
+            
             agent.rigidbody.velocity.x += agentAcceleration.x * deltaTime;
             agent.rigidbody.velocity.y += agentAcceleration.y * deltaTime;
 
             // Clamp velocity to max speed
-            float agentSpeed = Length(agent.rigidbody.velocity);
+            float agentSpeed = Length(agent.rigidbody.velocity); // This function calculates the magnitude or length of a vector.
             if (agentSpeed > agent.maxSpeed)
             {
-                agent.rigidbody.velocity = Scale(agent.rigidbody.velocity, agent.maxSpeed / agentSpeed);
+                // This function scales (or multiplies) a vector by a scalar value. 
+                // Scale(agent.rigidbody.velocity, agent.maxSpeed / agentSpeed) scales the agent.rigidbody.velocity vector by a factor of agent.maxSpeed / agentSpeed. 
+                // This operation adjusts the magnitude of the velocity vector to ensure it does not exceed the maximum speed (agent.maxSpeed).
+                // This is us updating the new speed after the seek and flee functions are used.
+                agent.rigidbody.velocity = Scale(agent.rigidbody.velocity, agent.maxSpeed / agentSpeed); 
             }
 
             // Update agent
