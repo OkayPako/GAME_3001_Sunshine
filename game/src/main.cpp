@@ -22,6 +22,8 @@
 // DrawLineV(position, position + velocity, RED);
 // DrawLineV(position, position + acceleration, GREEN);
 
+// Raphael Flores 101139370
+
 #include "rlImGui.h"
 #include "raylib.h"
 #include "Math.h"
@@ -139,7 +141,7 @@ public:
 
 int main()
 {
-    InitWindow(screenWidth, screenHeight, "Seek and Flee");
+    InitWindow(screenWidth, screenHeight, "Raphael Flores 101139370 - Seek and Flee");
 
     // Background
     Texture2D sea = LoadTexture("../game/assets/textures/sea.png");
