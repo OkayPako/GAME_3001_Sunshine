@@ -194,9 +194,10 @@ int main()
             {
                 // In the main code snippet, there are three separate flee behaviors being calculated:
 
-                // a.fleeFromAgent calculates the flee behavior relative to the agent's own position. It calls the Flee function, passing the agent's current position(agent->rigidbody.position) as both the agent's position and the target position.
-                // b.fleeFromMouse calculates the flee behavior relative to the mouse position. It also calls the Flee function, but this time it passes the agent's current position as the agent position and the mousePosition as the target position.
-                // c.fleeFromObjects calculates the flee behavior relative to multiple object positions. It initializes a vector fleeFromObjects as (0, 0) and then iterates over each object position in the objectPositions container.
+                // 1.fleeFromAgent calculates the flee behavior relative to the agent's own position. It calls the Flee function, passing the agent's current position(agent->rigidbody.position) as both the agent's position and the target position.
+                // 2.fleeFromMouse calculates the flee behavior relative to the mouse position. It also calls the Flee function, but this time it passes the agent's current position as the agent position and the mousePosition as the target position.
+                // 3.fleeFromObjects calculates the flee behavior relative to multiple object positions. It initializes a vector fleeFromObjects as (0, 0) and then iterates over each object position in the objectPositions container.
+                
                 // For each object position, it calls the Flee function, passing the agent's current position as the agent position and the object position as the target position. 
                 // The resulting flee behavior is accumulated by adding it to fleeFromObjects.
 
