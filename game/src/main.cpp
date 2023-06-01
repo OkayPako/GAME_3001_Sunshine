@@ -62,12 +62,21 @@ int main(void)
 
         bool leftCollision = CheckCollisionLineCircle(seeker.pos, leftEnd, obstaclePosition, obstacleRadius);
         bool rightCollision = CheckCollisionLineCircle(seeker.pos, rightEnd, obstaclePosition, obstacleRadius);
+
         if (rightCollision)
         {
             Vector2 linearDirection = Normalize(seeker.vel);
             float linearSpeed = Length(seeker.vel);
             seeker.vel = Rotate(linearDirection, -seeker.angularSpeed * dt * DEG2RAD) * linearSpeed;
         }
+
+        if (leftCollision)
+        {
+            Vector2 linearDirection = Normalize(seeker.vel);
+            float linearSpeed = Length(seeker.vel);
+            seeker.vel = Rotate(linearDirection, seeker.angularSpeed * dt * DEG2RAD) * linearSpeed;
+        }
+
         Color rightColor = rightCollision ? RED : GREEN;
         Color leftColor = leftCollision ? RED : GREEN;
 
