@@ -60,30 +60,47 @@ public:
     {
         Vector2 right = Rotate(rb.dir, 30.0f * DEG2RAD);
         Vector2 left = Rotate(rb.dir, -30.0f * DEG2RAD);
+        Vector2 right2 = Rotate(rb.dir, 60.0f * DEG2RAD);
+        Vector2 left2 = Rotate(rb.dir, -60.0f * DEG2RAD);
         Vector2 rightEnd = rb.pos + right * lineLength;
         Vector2 leftEnd = rb.pos + left * lineLength;
+        Vector2 right2End = rb.pos + right2 * lineLength;
+        Vector2 left2End = rb.pos + left2 * lineLength;
 
         bool leftCollision = CheckCollisionLineCircle(rb.pos, leftEnd, obstaclePosition, obstacleRadius);
         bool rightCollision = CheckCollisionLineCircle(rb.pos, rightEnd, obstaclePosition, obstacleRadius);
+        bool left2Collision = CheckCollisionLineCircle(rb.pos, left2End, obstaclePosition, obstacleRadius);
+        bool right2Collision = CheckCollisionLineCircle(rb.pos, right2End, obstaclePosition, obstacleRadius);
 
-        if (rightCollision)
+        if (rightCollision || leftCollision || right2Collision || left2Collision)
         {
             Vector2 linearDirection = Normalize(rb.vel);
             float linearSpeed = Length(rb.vel);
             rb.vel = Rotate(linearDirection, -rb.angularSpeed * dt * DEG2RAD) * linearSpeed;
         }
 
-        if (leftCollision)
+        // Apply avoidance force
+        if (rightCollision)
         {
-            Vector2 linearDirection = Normalize(rb.vel);
-            float linearSpeed = Length(rb.vel);
-            rb.vel = Rotate(linearDirection, rb.angularSpeed * dt * DEG2RAD) * linearSpeed;
+            Vector2 avoidanceDir = Rotate(rb.dir, -30.0f * DEG2RAD);
+            rb.acc = rb.acc + avoidanceDir * avoidanceForce;
         }
 
-        // Apply avoidance force
-        if (leftCollision || rightCollision)
+        if (leftCollision)
         {
-            Vector2 avoidanceDir = Normalize(rb.pos - obstaclePosition);
+            Vector2 avoidanceDir = Rotate(rb.dir, 30.0f * DEG2RAD);
+            rb.acc = rb.acc + avoidanceDir * avoidanceForce;
+        }
+
+        if (right2Collision)
+        {
+            Vector2 avoidanceDir = Rotate(rb.dir, -60.0f * DEG2RAD);
+            rb.acc = rb.acc + avoidanceDir * avoidanceForce;
+        }
+
+        if (left2Collision)
+        {
+            Vector2 avoidanceDir = Rotate(rb.dir, 60.0f * DEG2RAD);
             rb.acc = rb.acc + avoidanceDir * avoidanceForce;
         }
     }
@@ -121,7 +138,7 @@ int main(void)
         }
 
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(BLACK);
 
         // Drawing agent and obstacles
         DrawCircleV(agent.rb.pos, agent.radius, BLUE);
@@ -135,20 +152,34 @@ int main(void)
         Vector2 left = Rotate(agent.rb.dir, -30.0f * DEG2RAD);
         Vector2 rightEnd = agent.rb.pos + right * agent.lineLength;
         Vector2 leftEnd = agent.rb.pos + left * agent.lineLength;
+        Vector2 right2 = Rotate(agent.rb.dir, 60.0f * DEG2RAD);
+        Vector2 left2 = Rotate(agent.rb.dir, -60.0f * DEG2RAD);
+        Vector2 right2End = agent.rb.pos + right2 * agent.lineLength;
+        Vector2 left2End = agent.rb.pos + left2 * agent.lineLength;
+
         bool leftCollision = false;
         bool rightCollision = false;
+        bool left2Collision = false;
+        bool right2Collision = false;
 
         // Check collisions with each obstacle position individually
         for (const auto& obstaclePosition : obstaclePositions)
         {
             leftCollision |= CheckCollisionLineCircle(agent.rb.pos, leftEnd, obstaclePosition, 50.0f);
             rightCollision |= CheckCollisionLineCircle(agent.rb.pos, rightEnd, obstaclePosition, 50.0f);
+            left2Collision |= CheckCollisionLineCircle(agent.rb.pos, left2End, obstaclePosition, 50.0f);
+            right2Collision |= CheckCollisionLineCircle(agent.rb.pos, right2End, obstaclePosition, 50.0f);
         }
 
         Color rightColor = rightCollision ? RED : GREEN;
         Color leftColor = leftCollision ? RED : GREEN;
+        Color right2Color = right2Collision ? RED : GREEN;
+        Color left2Color = left2Collision ? RED : GREEN;
+
         DrawLineV(agent.rb.pos, rightEnd, rightColor);
         DrawLineV(agent.rb.pos, leftEnd, leftColor);
+        DrawLineV(agent.rb.pos, right2End, right2Color);
+        DrawLineV(agent.rb.pos, left2End, left2Color);
 
         if (IsKeyPressed(KEY_GRAVE)) useGUI = !useGUI;
         if (useGUI)
