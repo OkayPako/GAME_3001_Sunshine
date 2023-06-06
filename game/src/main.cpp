@@ -7,12 +7,12 @@
 // Defines the properties of the seeker, including position, velocity, acceleration, direction, and angular speed.
 struct Rigidbody
 {
-    Vector2 pos{};
-    Vector2 vel{};
-    Vector2 acc{};
+    Vector2 pos{};          // Position
+    Vector2 vel{};          // Velocity
+    Vector2 acc{};          // Acceleration
 
-    Vector2 dir{};
-    float angularSpeed;
+    Vector2 dir{};          // Direction
+    float angularSpeed;     // Angular speed (in degrees per second)
 };
 
 // Checks if a line segment intersects with a circle, which is used later to detect collisions between the seeker and an obstacle.
@@ -24,8 +24,6 @@ bool CheckCollisionLineCircle(Vector2 lineStart, Vector2 lineEnd, Vector2 circle
 
 // Updates the agent's position and velocity based on its acceleration and the time step dt. 
 // It uses basic kinematic equations to calculate the new values.
-// velocity = velocity * acceleration * deltaTime
-// position(2) = position(1) * acceleration + velocity * deltaTime + 0.5 * acceleration * deltaTime * deltaTime
 void Integrate(Rigidbody& rb, float dt)
 {
     rb.vel = rb.vel + rb.acc * dt;
@@ -43,9 +41,9 @@ Vector2 Seek(const Vector2& pos, const Rigidbody& rb, float maxSpeed)
 class Agent
 {
 public:
-    Rigidbody rb;
-    float lineLength;
-    float radius;
+    Rigidbody rb;           // Rigidbody of the agent
+    float lineLength;       // Length of the whiskers
+    float radius;           // Radius of the agent
 
     Agent(float startX, float startY, float angularSpeed, float lineLength, float radius)
         : lineLength(lineLength), radius(radius)
@@ -74,6 +72,7 @@ public:
 
         if (rightCollision || leftCollision || right2Collision || left2Collision)
         {
+            // Rotate the agent's velocity in the opposite direction to simulate avoidance behavior
             Vector2 linearDirection = Normalize(rb.vel);
             float linearSpeed = Length(rb.vel);
             rb.vel = Rotate(linearDirection, -rb.angularSpeed * dt * DEG2RAD) * linearSpeed;
@@ -197,3 +196,20 @@ int main(void)
     CloseWindow();
     return 0;
 }
+
+// In the main function, the code sets up the window and initializes the ImGui library for graphical user interface.
+// It creates an Agent object with an initial position, angular speed, line length, and radius. It also declares a vector to store obstacle positions.
+
+// Inside the game loop, the code calculates the agent's acceleration based on its current position and the position of the mouse cursor using the Seek function. 
+// The Integrate function is then called to update the agent's position and velocity based on the acceleration and time step.
+
+// Next, the code iterates over all obstacle positions and calls the ObstacleAvoidance function on the agent to check for collisions and perform obstacle avoidance behavior.
+// If a collision is detected, the agent's velocity is rotated in the opposite direction to simulate avoidance. Additionally, avoidance forces are applied to the agent's acceleration based on the type of collision detected.
+
+// When the left mouse button is pressed, the code adds the current mouse position as a new obstacle position to the vector.
+
+// The code then proceeds to draw the agent, obstacles, and whiskers using various functions provided by the graphics library.
+
+// Finally, the code checks if the grave(`~`) key is pressed to toggle the use of the graphical user interface. If the GUI is enabled, the rlImGuiBegin and rlImGuiEnd functions are called to render the GUI elements.
+
+// The game loop continues until the window is closed, and at the end of the loop, the ImGui library is shut down, and the window is closed.
