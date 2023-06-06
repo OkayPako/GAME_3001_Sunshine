@@ -1,5 +1,6 @@
 #include "rlImGui.h"
 #include "Math.h"
+#include <vector>
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 
@@ -21,12 +22,10 @@ bool CheckCollisionLineCircle(Vector2 lineStart, Vector2 lineEnd, Vector2 circle
     return DistanceSqr(nearest, circlePosition) <= circleRadius * circleRadius;
 }
 
-// Updates the seeker's position and velocity based on its acceleration and the time step dt. 
-
+// Updates the agent's position and velocity based on its acceleration and the time step dt. 
 // It uses basic kinematic equations to calculate the new values.
 // velocity = velocity * acceleration * deltaTime
 // position(2) = position(1) * acceleration + velocity * deltaTime + 0.5 * acceleration * deltaTime * deltaTime
-
 void Integrate(Rigidbody& rb, float dt)
 {
     rb.vel = rb.vel + rb.acc * dt;
@@ -34,11 +33,61 @@ void Integrate(Rigidbody& rb, float dt)
     rb.dir = RotateTowards(rb.dir, Normalize(rb.vel), rb.angularSpeed * dt);
 }
 
-// Calculates a steering force that directs the seeker towards a target position while limiting its maximum speed.
+// Calculates a steering force that directs the agent towards a target position while limiting its maximum speed.
 Vector2 Seek(const Vector2& pos, const Rigidbody& rb, float maxSpeed)
 {
     return Normalize(pos - rb.pos) * maxSpeed - rb.vel;
 }
+
+// Agent class definition
+class Agent
+{
+public:
+    Rigidbody rb;
+    float lineLength;
+    float radius;
+
+    Agent(float startX, float startY, float angularSpeed, float lineLength, float radius)
+        : lineLength(lineLength), radius(radius)
+    {
+        rb.pos = { startX, startY };
+        rb.dir = { 0.0f, 1.0f };
+        rb.angularSpeed = angularSpeed;
+    }
+
+    // Checks for collisions with obstacle and performs obstacle avoidance
+    void ObstacleAvoidance(const Vector2& obstaclePosition, float obstacleRadius, float avoidanceForce, float dt)
+    {
+        Vector2 right = Rotate(rb.dir, 30.0f * DEG2RAD);
+        Vector2 left = Rotate(rb.dir, -30.0f * DEG2RAD);
+        Vector2 rightEnd = rb.pos + right * lineLength;
+        Vector2 leftEnd = rb.pos + left * lineLength;
+
+        bool leftCollision = CheckCollisionLineCircle(rb.pos, leftEnd, obstaclePosition, obstacleRadius);
+        bool rightCollision = CheckCollisionLineCircle(rb.pos, rightEnd, obstaclePosition, obstacleRadius);
+
+        if (rightCollision)
+        {
+            Vector2 linearDirection = Normalize(rb.vel);
+            float linearSpeed = Length(rb.vel);
+            rb.vel = Rotate(linearDirection, -rb.angularSpeed * dt * DEG2RAD) * linearSpeed;
+        }
+
+        if (leftCollision)
+        {
+            Vector2 linearDirection = Normalize(rb.vel);
+            float linearSpeed = Length(rb.vel);
+            rb.vel = Rotate(linearDirection, rb.angularSpeed * dt * DEG2RAD) * linearSpeed;
+        }
+
+        // Apply avoidance force
+        if (leftCollision || rightCollision)
+        {
+            Vector2 avoidanceDir = Normalize(rb.pos - obstaclePosition);
+            rb.acc = rb.acc + avoidanceDir * avoidanceForce;
+        }
+    }
+};
 
 int main(void)
 {
@@ -46,65 +95,60 @@ int main(void)
     rlImGuiSetup(true);
     SetTargetFPS(60);
 
-    Rigidbody seeker;
-    seeker.pos = { SCREEN_WIDTH * 0.5f, SCREEN_HEIGHT * 0.5f };
-    seeker.dir = { 0.0f, 1.0f };
-    seeker.angularSpeed = 100.0f;
-    float seekerLineLength = 100.0f;
-    float seekerRadius = 25.0f;
+    Agent agent(SCREEN_WIDTH * 0.5f, SCREEN_HEIGHT * 0.5f, 100.0f, 100.0f, 25.0f);
 
-    Vector2 obstaclePosition{ SCREEN_WIDTH * 0.75f, SCREEN_HEIGHT * 0.25f };
-    float obstacleRadius = 50.0f;
+    std::vector<Vector2> obstaclePositions;  // Store the positions of obstacles placed by the mouse
 
     bool useGUI = false;
     while (!WindowShouldClose())
     {
         const float dt = GetFrameTime();
 
-        Vector2 right = Rotate(seeker.dir, 30.0f * DEG2RAD);
-        Vector2 left = Rotate(seeker.dir, -30.0f * DEG2RAD);
-        Vector2 rightEnd = seeker.pos + right * seekerLineLength;
-        Vector2 leftEnd = seeker.pos + left * seekerLineLength;
+        agent.rb.acc = Seek(GetMousePosition(), agent.rb, 100.0f);
 
-        // Determines the desired steering force towards the current mouse position.
-        seeker.acc = Seek(GetMousePosition(), seeker, 100.0f);
+        Integrate(agent.rb, dt);
 
-        // Function is called to update the seeker's position and velocity.
-        Integrate(seeker, dt);
-
-        // Checks for collisions between the seeker's probe lines and the obstacle
-        bool leftCollision = CheckCollisionLineCircle(seeker.pos, leftEnd, obstaclePosition, obstacleRadius);
-        bool rightCollision = CheckCollisionLineCircle(seeker.pos, rightEnd, obstaclePosition, obstacleRadius);
-
-        // If a collision occurs, the seeker's velocity is adjusted to rotate away from the obstacle, simulating avoidance behavior.
-        if (rightCollision)
+        // Loop through all obstacle positions and perform obstacle avoidance
+        for (const auto& obstaclePosition : obstaclePositions)
         {
-            Vector2 linearDirection = Normalize(seeker.vel);
-            float linearSpeed = Length(seeker.vel);
-            seeker.vel = Rotate(linearDirection, -seeker.angularSpeed * dt * DEG2RAD) * linearSpeed;
+            agent.ObstacleAvoidance(obstaclePosition, 50.0f, 100.0f, dt);
         }
 
-        if (leftCollision)
+        // Add obstacle on mouse click
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
         {
-            Vector2 linearDirection = Normalize(seeker.vel);
-            float linearSpeed = Length(seeker.vel);
-            seeker.vel = Rotate(linearDirection, seeker.angularSpeed * dt * DEG2RAD) * linearSpeed;
+            obstaclePositions.push_back(GetMousePosition());
         }
-
-        // Colors of the probe lines are determined based on whether a collision occurred, with red indicating a collision and green indicating no collision.
-        Color rightColor = rightCollision ? RED : GREEN;
-        Color leftColor = leftCollision ? RED : GREEN;
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        // Drawing agent and obstacle
-        DrawCircleV(seeker.pos, seekerRadius, BLUE);
-        DrawCircleV(obstaclePosition, obstacleRadius, GRAY);
+        // Drawing agent and obstacles
+        DrawCircleV(agent.rb.pos, agent.radius, BLUE);
+        for (const auto& obstaclePosition : obstaclePositions)
+        {
+            DrawCircleV(obstaclePosition, 50.0f, GRAY);
+        }
 
         // Whiskers
-        DrawLineV(seeker.pos, rightEnd, rightColor);
-        DrawLineV(seeker.pos, leftEnd, leftColor);
+        Vector2 right = Rotate(agent.rb.dir, 30.0f * DEG2RAD);
+        Vector2 left = Rotate(agent.rb.dir, -30.0f * DEG2RAD);
+        Vector2 rightEnd = agent.rb.pos + right * agent.lineLength;
+        Vector2 leftEnd = agent.rb.pos + left * agent.lineLength;
+        bool leftCollision = false;
+        bool rightCollision = false;
+
+        // Check collisions with each obstacle position individually
+        for (const auto& obstaclePosition : obstaclePositions)
+        {
+            leftCollision |= CheckCollisionLineCircle(agent.rb.pos, leftEnd, obstaclePosition, 50.0f);
+            rightCollision |= CheckCollisionLineCircle(agent.rb.pos, rightEnd, obstaclePosition, 50.0f);
+        }
+
+        Color rightColor = rightCollision ? RED : GREEN;
+        Color leftColor = leftCollision ? RED : GREEN;
+        DrawLineV(agent.rb.pos, rightEnd, rightColor);
+        DrawLineV(agent.rb.pos, leftEnd, leftColor);
 
         if (IsKeyPressed(KEY_GRAVE)) useGUI = !useGUI;
         if (useGUI)
