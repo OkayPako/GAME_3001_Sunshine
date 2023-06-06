@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include "Math.h"
 #include <vector>
+#include <iostream>
 
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
@@ -150,6 +151,11 @@ int main(void)
     {
         // Update
         float deltaTime = GetFrameTime();
+
+
+        int choice;
+        std::cin >> choice;
+
         BeginDrawing();
         ClearBackground(SKYBLUE);
 
