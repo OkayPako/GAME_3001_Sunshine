@@ -152,15 +152,41 @@ int main(void)
         // Update
         float deltaTime = GetFrameTime();
 
-
-        int choice;
-        std::cin >> choice;
-
         BeginDrawing();
         ClearBackground(SKYBLUE);
 
         // Draw Background
         DrawTexture(background, 0, 0, RAYWHITE);
+
+        DrawText("Welcome to the fishy simulator!", 10, 30, 20, RAYWHITE);
+        DrawText("1 for SEEK", 10, 50, 20, RAYWHITE);
+        DrawText("2 for FLEE", 10, 70, 20, RAYWHITE);
+        DrawText("3 for ARRIVE", 10, 90, 20, RAYWHITE);
+        DrawText("4 for OBSTACLE AVOIDANCE", 10, 110, 20, RAYWHITE);
+
+        //int choice;
+        //std::cin >> choice;
+        //switch (choice)
+        //{
+        //case 1:
+        //    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        //    {
+        //        for (Fish& agent : fishies)
+        //        {
+        //            agent.rigidbody.acc = Seek(GetMousePosition(), agent.rigidbody, agent.maxSpeed);
+        //        }
+        //    }
+        //    break;
+        //case 2:
+        //    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        //    {
+        //        for (Fish& agent : fishies)
+        //        {
+        //            agent.rigidbody.acc = Flee(GetMousePosition(), agent.rigidbody, agent.maxSpeed);
+        //        }
+        //    }
+        //    break;
+        //}
 
         // Draw agents
         for (const Fish& agent : fishies)
