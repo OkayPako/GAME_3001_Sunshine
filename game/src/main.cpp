@@ -111,15 +111,29 @@ public:
 };
 
 // Calculates a steering force that directs the agent towards a target position while limiting its maximum speed.
-Vector2 Seek(const Vector2& pos, const Rigidbody& rigidbody, float maxSpeed)
-{
-    return Normalize(pos - rigidbody.pos) * maxSpeed - rigidbody.vel;
-}
+//Vector2 Seek(const Vector2& pos, const Rigidbody& rigidbody, float maxSpeed)
+//{
+//    return Normalize(pos - rigidbody.pos) * maxSpeed - rigidbody.vel;
+//}
 
 // Calculates a steering force that directs a target position towards the agent while limiting its maximum speed.
-Vector2 Flee(const Vector2& pos, const Rigidbody& rigidbody, float maxSpeed)
+//Vector2 Flee(const Vector2& pos, const Rigidbody& rigidbody, float maxSpeed)
+//{
+//    return Normalize(rigidbody.pos - pos) * maxSpeed - rigidbody.vel;
+//}
+
+// Calculates a steering force that directs the fish towards a target position while limiting its maximum speed.
+Vector2 Seek(const Vector2& target, const Rigidbody& fishBody, float maxSpeed)
 {
-    return Normalize(rigidbody.pos - pos) * maxSpeed - rigidbody.vel;
+    Vector2 desiredVel = Normalize(target - fishBody.pos) * maxSpeed;
+    return desiredVel - fishBody.vel;
+}
+
+// Calculates a steering force that directs the fish away from a target position while limiting its maximum speed.
+Vector2 Flee(const Vector2& target, const Rigidbody& fishBody, float maxSpeed)
+{
+    Vector2 desiredVel = Normalize(fishBody.pos - target) * maxSpeed;
+    return desiredVel - fishBody.vel;
 }
 
 // Checks if a line segment intersects with a obstacle, which is used later to detect collisions between the seeker and an obstacle.
@@ -147,6 +161,8 @@ int main(void)
     fishies.push_back(fish1);
     fishies.push_back(fish2);
 
+    int mode = 0;  // Initialize mode to 0
+
     while (!WindowShouldClose())
     {
         // Update
@@ -163,35 +179,94 @@ int main(void)
         DrawText("2 for FLEE", 10, 70, 20, RAYWHITE);
         DrawText("3 for ARRIVE", 10, 90, 20, RAYWHITE);
         DrawText("4 for OBSTACLE AVOIDANCE", 10, 110, 20, RAYWHITE);
+        DrawText("Press SPACE to reset", 10, 130, 20, RAYWHITE);
 
-        //int choice;
-        //std::cin >> choice;
-        //switch (choice)
-        //{
-        //case 1:
-        //    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-        //    {
-        //        for (Fish& agent : fishies)
-        //        {
-        //            agent.rigidbody.acc = Seek(GetMousePosition(), agent.rigidbody, agent.maxSpeed);
-        //        }
-        //    }
-        //    break;
-        //case 2:
-        //    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-        //    {
-        //        for (Fish& agent : fishies)
-        //        {
-        //            agent.rigidbody.acc = Flee(GetMousePosition(), agent.rigidbody, agent.maxSpeed);
-        //        }
-        //    }
-        //    break;
-        //}
-
-        // Draw agents
-        for (const Fish& agent : fishies)
+        // Check keyboard input
+        if (IsKeyPressed(KEY_SPACE))
         {
+            // Reset the simulation
+            fishies.clear();
+            fish1 = Fish({ 400,400 }, fishPic, 50, 50, 200.0f, 400.0f);
+            fish2 = Fish({ 800,400 }, fishPic, 50, 50, 400.0f, 800.0f);
+            fishies.push_back(fish1);
+            fishies.push_back(fish2);
+            mode = 0;
+        }
+
+        // Check mouse input
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+            switch (mode)
+            {
+            case 1:
+                // Seek behavior
+                for (Fish& agent : fishies)
+                {
+                    agent.rigidbody.acc = Seek(GetMousePosition(), agent.rigidbody, agent.maxSpeed);
+                }
+                break;
+            case 2:
+                // Flee behavior
+                for (Fish& agent : fishies)
+                {
+                    agent.rigidbody.acc = Flee(GetMousePosition(), agent.rigidbody, agent.maxSpeed);
+                }
+                break;
+            case 3:
+                // Arrival behavior
+                for (Fish& agent : fishies)
+                {
+                    Vector2 target = GetMousePosition();
+                    Vector2 direction = target - agent.rigidbody.pos;
+                    float distance = Length(direction);
+                    if (distance > 0)
+                    {
+                        float arrivalRadius = 100.0f;
+                        float slowRadius = 200.0f;
+                        float targetSpeed = agent.maxSpeed * (distance > slowRadius ? 1.0f : distance / slowRadius);
+                        Vector2 targetVelocity = Normalize(direction) * targetSpeed;
+                        agent.rigidbody.acc = targetVelocity - agent.rigidbody.vel;
+                    }
+                    else
+                    {
+                        agent.rigidbody.acc = { 0, 0 };
+                    }
+                }
+                break;
+            case 4:
+                // Obstacle avoidance behavior
+                // TODO: Implement obstacle avoidance logic here
+                break;
+            }
+        }
+
+        // Update and draw agents
+        for (Fish& agent : fishies)
+        {
+            agent.Update(deltaTime);
             agent.Draw();
+        }
+
+        // Change the mode based on keyboard input
+        if (IsKeyPressed(KEY_ZERO))  // 0 key
+        {
+            mode = 0;
+        }
+        else if (IsKeyPressed(KEY_ONE))  // 1 key
+        {
+            mode = 1;
+        }
+        else if (IsKeyPressed(KEY_TWO))  // 2 key
+        {
+            mode = 2;
+        }
+        else if (IsKeyPressed(KEY_THREE))  // 3 key
+        {
+            mode = 3;
+        }
+        else if (IsKeyPressed(KEY_FOUR))  // 4 key
+        {
+            mode = 4;
         }
 
         EndDrawing();
