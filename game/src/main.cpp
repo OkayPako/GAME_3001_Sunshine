@@ -123,17 +123,17 @@ public:
 //}
 
 // Calculates a steering force that directs the fish towards a target position while limiting its maximum speed.
-Vector2 Seek(const Vector2& target, const Rigidbody& fishBody, float maxSpeed)
+Vector2 Seek(const Vector2& target, const Fish& fish, float maxSpeed)
 {
-    Vector2 desiredVel = Normalize(target - fishBody.pos) * maxSpeed;
-    return desiredVel - fishBody.vel;
+    Vector2 desiredVel = Normalize(target - fish.rigidbody.pos) * maxSpeed;
+    return desiredVel - fish.rigidbody.vel;
 }
 
 // Calculates a steering force that directs the fish away from a target position while limiting its maximum speed.
-Vector2 Flee(const Vector2& target, const Rigidbody& fishBody, float maxSpeed)
+Vector2 Flee(const Vector2& target, const Fish& fish, float maxSpeed)
 {
-    Vector2 desiredVel = Normalize(fishBody.pos - target) * maxSpeed;
-    return desiredVel - fishBody.vel;
+    Vector2 desiredVel = Normalize(fish.rigidbody.pos - target) * maxSpeed;
+    return desiredVel - fish.rigidbody.vel;
 }
 
 // Checks if a line segment intersects with a obstacle, which is used later to detect collisions between the seeker and an obstacle.
@@ -199,17 +199,21 @@ int main(void)
             switch (mode)
             {
             case 1:
-                // Seek behavior
-                for (Fish& agent : fishies)
+                if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
                 {
-                    agent.rigidbody.acc = Seek(GetMousePosition(), agent.rigidbody, agent.maxSpeed);
+                    for (Fish& agent : fishies)
+                    {
+                        agent.rigidbody.acc = Seek(GetMousePosition(), agent, agent.maxSpeed);
+                    }
                 }
                 break;
             case 2:
-                // Flee behavior
-                for (Fish& agent : fishies)
+                if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
                 {
-                    agent.rigidbody.acc = Flee(GetMousePosition(), agent.rigidbody, agent.maxSpeed);
+                    for (Fish& agent : fishies)
+                    {
+                        agent.rigidbody.acc = Flee(GetMousePosition(), agent, agent.maxSpeed);
+                    }
                 }
                 break;
             case 3:
