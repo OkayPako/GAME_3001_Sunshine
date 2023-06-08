@@ -38,7 +38,7 @@ int main(void)
             rlImGuiEnd();
         }
 
-        DrawText("Hello World!", 16, 9, 20, RED);
+        DrawText("Tile Map!", 20, 10, 20, RAYWHITE);
         EndDrawing();
     }
 
