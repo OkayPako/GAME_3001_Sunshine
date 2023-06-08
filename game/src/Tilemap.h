@@ -17,6 +17,9 @@ enum class Tile
 
 class Tilemap
 {
+private:
+    bool isTranversable[(int)Tile::count];
+
 public:
     float tileSizeX = 32; // width of a tile in pixels
     float tileSizeY = 32; // height of a tile in pixels
@@ -24,6 +27,19 @@ public:
     Color tileColors[(int)Tile::count];
 
     Tile tiles[MAP_WIDTH][MAP_HEIGHT];
+
+    Tilemap()
+    {
+        tileColors[(int)Tile::floor] = BEIGE;
+        tileColors[(int)Tile::grass] = GREEN;
+        tileColors[(int)Tile::water] = SKYBLUE;
+        tileColors[(int)Tile::wall] = DARKGRAY;
+
+        isTranversable[(int)Tile::floor] = true;
+        isTranversable[(int)Tile::grass] = true;
+        isTranversable[(int)Tile::water] = false;
+        isTranversable[(int)Tile::wall] = false;
+    }
 
     Vector2 GetScreenPositionOfTile(TileCoord coordinate)
     {
@@ -35,12 +51,10 @@ public:
 
     }
 
-    Tilemap()
+    bool isTileTraversable(TileCoord coordinate)
     {
-        tileColors[(int)Tile::floor] = BEIGE;
-        tileColors[(int)Tile::grass] = GREEN;
-        tileColors[(int)Tile::water] = SKYBLUE;
-        tileColors[(int)Tile::wall] = DARKGRAY;
+        Tile tileType = tiles[coordinate.x][coordinate.y];
+        return isTranversable[(int)Tile::count];
     }
 
     void Randomize(int chanceOfFloor = 50)
