@@ -227,29 +227,6 @@ int main(void)
         DrawText("4 for OBSTACLE AVOIDANCE", 10, 110, 20, RAYWHITE);
         DrawText("Press SPACE to reset", 10, 130, 20, RAYWHITE);
 
-        Vector2 right = Rotate(fish1.rigidbody.dir, 30.0 * DEG2RAD);
-        Vector2 left = Rotate(fish1.rigidbody.dir, -30.0 * DEG2RAD);
-        Vector2 rightWisk = fish1.rigidbody.pos + right * wiskerLength;
-        Vector2 leftWisk = fish1.rigidbody.pos + left * wiskerLength;
-        bool leftCollision = false;
-        bool rightCollision = false;
-
-        for (const auto& obstaclePosition : obstaclePositions)
-        {
-            leftCollision = CheckCollisionLineCircle(fish1.rigidbody.pos, leftWisk, obstaclePosition, obstacleRadius);
-            rightCollision = CheckCollisionLineCircle(fish1.rigidbody.pos, rightWisk, obstaclePosition, obstacleRadius);
-        }
-        Color rightColor = rightCollision ? RED : GREEN;
-        Color leftColor = leftCollision ? RED : GREEN;
-        Color topColor = leftCollision ? RED : GREEN;
-        Color bottomColor = leftCollision ? RED : GREEN;
-
-        DrawLineV(fish1.rigidbody.pos, rightWisk, rightColor);
-        DrawLineV(fish1.rigidbody.pos, leftWisk, leftColor);
-
-
-
-        DrawCircleV(fish1.rigidbody.pos, fish1.radius, BLUE);
 
 
         // Check keyboard input
@@ -311,6 +288,29 @@ int main(void)
             case 4:
                 // Obstacle avoidance behavior
                 // TODO: Implement obstacle avoidance logic here
+                 Vector2 right = Rotate(fish1.rigidbody.dir, 30.0 * DEG2RAD);
+                 Vector2 left = Rotate(fish1.rigidbody.dir, -30.0 * DEG2RAD);
+                 Vector2 rightWisk = fish1.rigidbody.pos + right * wiskerLength;
+                 Vector2 leftWisk = fish1.rigidbody.pos + left * wiskerLength;
+                 bool leftCollision = false;
+                 bool rightCollision = false;
+
+                 for (const auto& obstaclePosition : obstaclePositions)
+                 {
+                     leftCollision = CheckCollisionLineCircle(fish1.rigidbody.pos, leftWisk, obstaclePosition, obstacleRadius);
+                     rightCollision = CheckCollisionLineCircle(fish1.rigidbody.pos, rightWisk, obstaclePosition, obstacleRadius);
+                 }
+                 Color rightColor = rightCollision ? RED : GREEN;
+                 Color leftColor = leftCollision ? RED : GREEN;
+                 Color topColor = leftCollision ? RED : GREEN;
+                 Color bottomColor = leftCollision ? RED : GREEN;
+
+                 DrawLineV(fish1.rigidbody.pos, rightWisk, rightColor);
+                 DrawLineV(fish1.rigidbody.pos, leftWisk, leftColor);
+
+
+
+                 DrawCircleV(fish1.rigidbody.pos, fish1.radius, BLUE);
                 break;
             }
         }
