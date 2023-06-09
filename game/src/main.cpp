@@ -43,9 +43,10 @@ public:
     float lineLength;
     float radius;
 
-    Fish(const Vector2& position, const Texture2D& texture, float width, float height, float speed, float acceleration)
+    Fish(const Vector2& position, const Texture2D& texture, float width, float height, float speed, float acceleration, float lineLength, float radius)
         : maxSpeed(speed)
         , maxAcceleration(acceleration)
+        , lineLength(lineLength)
     {
         this->texture = texture;
         this->width = width;
@@ -56,13 +57,6 @@ public:
         rigidbody.angularSpeed = 0.0f; // Initial angular speed
     }
 
-    Fish(float startX, float startY, float angularSpeed, float lineLength, float radius)
-        : lineLength(lineLength), radius(radius)
-    {
-        rigidbody.pos = { startX, startY };
-        rigidbody.dir = { 0.0, 1.0 };
-        rigidbody.angularSpeed = angularSpeed;
-    }
 
     void Update(float deltaTime)
     {
@@ -206,17 +200,19 @@ int main(void)
     // Fishes
     std::vector<Fish> fishies;
     Texture2D fishPic = LoadTexture("../game/assets/textures/magikarp.png");
-    Fish fish1({ 400,400 }, fishPic, 50, 50, 200.0f, 400.0f);
-    Fish fish2({ 800,400 }, fishPic, 50, 50, 400.0f, 800.0f);
+    Fish fish1({ 400,400 }, fishPic, 50, 50, 200.0f, 400.0f,100.0f,20.0f);
+    Fish fish2({ 800,400 }, fishPic, 50, 50, 400.0f, 800.0f,100.0f, 20.0f);
     fishies.push_back(fish1);
     fishies.push_back(fish2);
-
+    float wiskerLength = 100;
     int mode = 0;  // Initialize mode to 0
 
     while (!WindowShouldClose())
     {
         // Update
         float deltaTime = GetFrameTime();
+        std::vector<Vector2> obstaclePositions;
+        float obstacleRadius = 50.0f;
 
         BeginDrawing();
         ClearBackground(SKYBLUE);
@@ -231,13 +227,38 @@ int main(void)
         DrawText("4 for OBSTACLE AVOIDANCE", 10, 110, 20, RAYWHITE);
         DrawText("Press SPACE to reset", 10, 130, 20, RAYWHITE);
 
+        Vector2 right = Rotate(fish1.rigidbody.dir, 30.0 * DEG2RAD);
+        Vector2 left = Rotate(fish1.rigidbody.dir, -30.0 * DEG2RAD);
+        Vector2 rightWisk = fish1.rigidbody.pos + right * wiskerLength;
+        Vector2 leftWisk = fish1.rigidbody.pos + left * wiskerLength;
+        bool leftCollision = false;
+        bool rightCollision = false;
+
+        for (const auto& obstaclePosition : obstaclePositions)
+        {
+            leftCollision = CheckCollisionLineCircle(fish1.rigidbody.pos, leftWisk, obstaclePosition, obstacleRadius);
+            rightCollision = CheckCollisionLineCircle(fish1.rigidbody.pos, rightWisk, obstaclePosition, obstacleRadius);
+        }
+        Color rightColor = rightCollision ? RED : GREEN;
+        Color leftColor = leftCollision ? RED : GREEN;
+        Color topColor = leftCollision ? RED : GREEN;
+        Color bottomColor = leftCollision ? RED : GREEN;
+
+        DrawLineV(fish1.rigidbody.pos, rightWisk, rightColor);
+        DrawLineV(fish1.rigidbody.pos, leftWisk, leftColor);
+
+
+
+        DrawCircleV(fish1.rigidbody.pos, fish1.radius, BLUE);
+
+
         // Check keyboard input
         if (IsKeyPressed(KEY_SPACE))
         {
             // Reset the simulation
             fishies.clear();
-            fish1 = Fish({ 400,400 }, fishPic, 50, 50, 200.0f, 400.0f);
-            fish2 = Fish({ 800,400 }, fishPic, 50, 50, 400.0f, 800.0f);
+            fish1 = Fish({ 400,400 }, fishPic, 50, 50, 200.0f, 400.0f,100.0f, 100.0f);
+            fish2 = Fish({ 800,400 }, fishPic, 50, 50, 400.0f, 800.0f, 100.0f, 20.0f);
             fishies.push_back(fish1);
             fishies.push_back(fish2);
             mode = 0;
@@ -322,7 +343,7 @@ int main(void)
         {
             mode = 4;
         }
-
+        DrawCircleV(fish1.rigidbody.pos, fish1.radius, RED);
         EndDrawing();
     }
 
