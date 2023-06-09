@@ -1,30 +1,22 @@
-#include "rlImGui.h"
 #include "raylib.h"
 #include "Math.h"
+#include <cmath>
 #include <vector>
-#include <iostream>
-
-#define SCREEN_WIDTH 1920
-#define SCREEN_HEIGHT 1080
 
 struct Rigidbody
 {
-    Vector2 pos{};          // Position
-    Vector2 vel{};          // Velocity
-    Vector2 acc{};          // Acceleration
-
-    Vector2 dir{};          // Direction
-    float angularSpeed;     // Angular speed (in degrees per second)
+    Vector2 pos{};
+    Vector2 vel{};
+    Vector2 acc{};
+    Vector2 dir{};
+    float angularSpeed{};
 };
 
-void Integrate(Rigidbody& rb, float dt)
+struct Obstacle
 {
-    rb.vel = rb.vel + rb.acc * dt;
-    rb.pos = rb.pos + rb.vel * dt + rb.acc * dt * dt * 0.5;
-    rb.dir = RotateTowards(rb.dir, Normalize(rb.vel), rb.angularSpeed * dt);
-}
-
-
+    Vector2 position{};
+    float radius{};
+};
 
 class Fish
 {
@@ -45,68 +37,36 @@ public:
         this->height = height;
         rigidbody.pos = position;
         rigidbody.vel = { 0, 0 };
-        rigidbody.dir = { 1, 0 }; // Initial direction
-        rigidbody.angularSpeed = 0.0f; // Initial angular speed
+        rigidbody.dir = { 1, 0 };
+        rigidbody.angularSpeed = 0.0f;
     }
-
 
     void Update(float deltaTime)
     {
-        // Calculate desired velocity based on direction and maximum speed
-        Vector2 desiredVel = Scale(rigidbody.dir, maxSpeed);
-
-        // Calculate steering force based on desired velocity and current velocity
-        Vector2 steering = Subtract(desiredVel, rigidbody.vel);
-
-        // Limit the steering force to the maximum swim acceleration
-        steering = Clamp(steering, -maxAcceleration, maxAcceleration);
-
-        // Apply the steering force to the fish's acceleration
-        rigidbody.acc = steering;
-
         // Update velocity based on acceleration
-        rigidbody.vel.x += rigidbody.acc.x * deltaTime;
-        rigidbody.vel.y += rigidbody.acc.y * deltaTime;
+        rigidbody.vel = rigidbody.vel + (rigidbody.acc * deltaTime);
 
         // Limit velocity to the maximum swim speed
-        rigidbody.vel = Clamp(rigidbody.vel, -maxSpeed, maxSpeed);
+        float speed = Length(rigidbody.vel);
+        if (speed > maxSpeed)
+        {
+            rigidbody.vel = Normalize(rigidbody.vel) * maxSpeed;
+        }
 
         // Update position based on velocity
-        rigidbody.pos.x += rigidbody.vel.x * deltaTime;
-        rigidbody.pos.y += rigidbody.vel.y * deltaTime;
+        rigidbody.pos = rigidbody.pos + (rigidbody.vel * deltaTime);
 
         // Update direction based on velocity
-        if (rigidbody.vel.x != 0 || rigidbody.vel.y != 0)
+        if (speed > 0)
         {
             rigidbody.dir = Normalize(rigidbody.vel);
         }
 
         // Update sprite rotation based on direction
-        float rotation = atan2f(rigidbody.dir.y, rigidbody.dir.x) * RAD2DEG;
-        rigidbody.angularSpeed = rotation;
+        rigidbody.angularSpeed = atan2f(rigidbody.dir.y, rigidbody.dir.x) * RAD2DEG;
 
-        // Check screen bounds
-        if (rigidbody.pos.x < 0)
-        {
-            rigidbody.pos.x = 0;
-            rigidbody.vel.x = 0;
-        }
-        else if (rigidbody.pos.x > SCREEN_WIDTH - width)
-        {
-            rigidbody.pos.x = SCREEN_WIDTH - width;
-            rigidbody.vel.x = 0;
-        }
-
-        if (rigidbody.pos.y < 0)
-        {
-            rigidbody.pos.y = 0;
-            rigidbody.vel.y = 0;
-        }
-        else if (rigidbody.pos.y > SCREEN_HEIGHT - height)
-        {
-            rigidbody.pos.y = SCREEN_HEIGHT - height;
-            rigidbody.vel.y = 0;
-        }
+        // Clear acceleration for the next frame
+        rigidbody.acc = { 0, 0 };
     }
 
     void Draw() const
@@ -119,179 +79,209 @@ public:
     }
 };
 
-// Calculates a steering force that directs the agent towards a target position while limiting its maximum speed.
-//Vector2 Seek(const Vector2& pos, const Rigidbody& rigidbody, float maxSpeed)
-//{
-//    return Normalize(pos - rigidbody.pos) * maxSpeed - rigidbody.vel;
-//}
-
-// Calculates a steering force that directs a target position towards the agent while limiting its maximum speed.
-//Vector2 Flee(const Vector2& pos, const Rigidbody& rigidbody, float maxSpeed)
-//{
-//    return Normalize(rigidbody.pos - pos) * maxSpeed - rigidbody.vel;
-//}
-
-// Calculates a steering force that directs the fish towards a target position while limiting its maximum speed.
-Vector2 Seek(const Vector2& target, const Fish& fish, float maxSpeed)
+float DistanceSquared(const Vector2& v1, const Vector2& v2)
 {
-    Vector2 desiredVel = Normalize(target - fish.rigidbody.pos) * maxSpeed;
-    return desiredVel - fish.rigidbody.vel;
+    float dx = v2.x - v1.x;
+    float dy = v2.y - v1.y;
+    return (dx * dx) + (dy * dy);
 }
 
-// Calculates a steering force that directs the fish away from a target position while limiting its maximum speed.
-Vector2 Flee(const Vector2& target, const Fish& fish, float maxSpeed)
-{
-    Vector2 desiredVel = Normalize(fish.rigidbody.pos - target) * maxSpeed;
-    return desiredVel - fish.rigidbody.vel;
-}
-
-// Checks if a line segment intersects with a obstacle, which is used later to detect collisions between the seeker and an obstacle.
 bool CheckCollisionLineCircle(Vector2 lineStart, Vector2 lineEnd, Vector2 circlePosition, float circleRadius)
 {
     Vector2 nearest = NearestPoint(lineStart, lineEnd, circlePosition);
-    return DistanceSqr(nearest, circlePosition) <= circleRadius * circleRadius;
+    return DistanceSquared(nearest, circlePosition) <= (circleRadius * circleRadius);
 }
 
-int main(void)
+int main()
 {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Fishies");
+    const int screenWidth = 1920;
+    const int screenHeight = 1080;
+
+    InitWindow(screenWidth, screenHeight, "Fish Behaviors");
     SetTargetFPS(60);
 
-    // Load background
-    Texture2D background = LoadTexture("../game/assets/textures/sea.png");
-    background.width = 1920;
-    background.height = 1080;
+    Texture2D sea = LoadTexture("../game/assets/textures/sea.png");
+    Texture2D fishTexture = LoadTexture("../game/assets/textures/magikarp.png");
 
-    // Fishes
     std::vector<Fish> fishies;
-    Texture2D fishPic = LoadTexture("../game/assets/textures/magikarp.png");
-    Fish fish1({ 400,400 }, fishPic, 50, 50, 200.0f, 400.0f);
-    Fish fish2({ 800,400 }, fishPic, 50, 50, 400.0f, 800.0f);
-    fishies.push_back(fish1);
-    fishies.push_back(fish2);
+    fishies.push_back(Fish({ 100, 200 }, fishTexture, 50, 50, 150.0f, 300.0f));
+    fishies.push_back(Fish({ 200, 300 }, fishTexture, 50, 50, 200.0f, 400.0f));
+    fishies.push_back(Fish({ 300, 400 }, fishTexture, 50, 50, 250.0f, 500.0f));
 
-    int mode = 0;  // Initialize mode to 0
+    std::vector<Obstacle> obstacles;
+
+    Vector2 targetPosition{};
+    bool seekMode = false;
+    bool fleeMode = false;
+    bool arriveMode = false;
+    bool avoidMode = false;
 
     while (!WindowShouldClose())
     {
+        BeginDrawing();
+        ClearBackground(BLACK);
+
         // Update
         float deltaTime = GetFrameTime();
 
-        BeginDrawing();
-        ClearBackground(SKYBLUE);
-
-        // Draw Background
-        DrawTexture(background, 0, 0, RAYWHITE);
-
-        DrawText("Welcome to the fishy simulator!", 10, 30, 20, RAYWHITE);
-        DrawText("1 for SEEK", 10, 50, 20, RAYWHITE);
-        DrawText("2 for FLEE", 10, 70, 20, RAYWHITE);
-        DrawText("3 for ARRIVE", 10, 90, 20, RAYWHITE);
-        DrawText("4 for OBSTACLE AVOIDANCE", 10, 110, 20, RAYWHITE);
-        DrawText("Press SPACE to reset", 10, 130, 20, RAYWHITE);
-
-        // Check keyboard input
-        if (IsKeyPressed(KEY_SPACE))
+        // Handle input
+        if (IsKeyPressed(KEY_ONE))
         {
-            // Reset the simulation
-            fishies.clear();
-            fish1 = Fish({ 400,400 }, fishPic, 50, 50, 200.0f, 400.0f);
-            fish2 = Fish({ 800,400 }, fishPic, 50, 50, 400.0f, 800.0f);
-            fishies.push_back(fish1);
-            fishies.push_back(fish2);
-            mode = 0;
+            seekMode = true;
+            fleeMode = false;
+            arriveMode = false;
+            avoidMode = false;
+        }
+        else if (IsKeyPressed(KEY_TWO))
+        {
+            seekMode = false;
+            fleeMode = true;
+            arriveMode = false;
+            avoidMode = false;
+        }
+        else if (IsKeyPressed(KEY_THREE))
+        {
+            seekMode = false;
+            fleeMode = false;
+            arriveMode = true;
+            avoidMode = false;
+        }
+        else if (IsKeyPressed(KEY_FOUR))
+        {
+            seekMode = false;
+            fleeMode = false;
+            arriveMode = false;
+            avoidMode = true;
         }
 
-        // Check mouse input
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
         {
-            switch (mode)
+            if (seekMode)
             {
-            case 1:
-                if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-                {
-                    for (Fish& agent : fishies)
-                    {
-                        agent.rigidbody.acc = Seek(GetMousePosition(), agent, agent.maxSpeed);
-                    }
-                }
-                break;
-            case 2:
-                if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-                {
-                    for (Fish& agent : fishies)
-                    {
-                        agent.rigidbody.acc = Flee(GetMousePosition(), agent, agent.maxSpeed);
-                    }
-                }
-                break;
-            case 3:
-                // Arrival behavior
-                for (Fish& agent : fishies)
-                {
-                    Vector2 target = GetMousePosition();
-                    Vector2 direction = target - agent.rigidbody.pos;
-                    float distance = Length(direction);
-                    if (distance > 0)
-                    {
-                        float arrivalRadius = 100.0f;
-                        float slowRadius = 200.0f;
-                        float targetSpeed = agent.maxSpeed * (distance > slowRadius ? 1.0f : distance / slowRadius);
-                        Vector2 targetVelocity = Normalize(direction) * targetSpeed;
-                        agent.rigidbody.acc = targetVelocity - agent.rigidbody.vel;
-                    }
-                    else
-                    {
-                        agent.rigidbody.acc = { 0, 0 };
-                    }
-                }
-                break;
-            case 4:
-                // Obstacle avoidance behavior
-                // TODO: Implement obstacle avoidance logic here
-                break;
+                targetPosition = GetMousePosition();
             }
         }
 
-        // Update and draw agents
-        for (Fish& agent : fishies)
+        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
         {
-            agent.Update(deltaTime);
-            agent.Draw();
+            if (avoidMode)
+            {
+                Obstacle obstacle;
+                obstacle.position = GetMousePosition();
+                obstacle.radius = 32.0f;
+                obstacles.push_back(obstacle);
+            }
         }
 
-        // Change the mode based on keyboard input
-        if (IsKeyPressed(KEY_ZERO))  // 0 key
+        // Behaviors
+        for (Fish& fish : fishies)
         {
-            mode = 0;
+            // Seek behavior
+            if (seekMode)
+            {
+                Vector2 desiredVel = targetPosition - fish.rigidbody.pos;
+                desiredVel = Normalize(desiredVel) * fish.maxSpeed;
+                Vector2 steering = desiredVel - fish.rigidbody.vel;
+                fish.rigidbody.acc = fish.rigidbody.acc + steering;
+            }
+
+            // Flee behavior
+            if (fleeMode)
+            {
+                Vector2 predatorPosition = GetMousePosition();
+                Vector2 desiredVel = fish.rigidbody.pos - predatorPosition;
+                desiredVel = Normalize(desiredVel) * fish.maxSpeed;
+                Vector2 steering = desiredVel - fish.rigidbody.vel;
+                fish.rigidbody.acc = fish.rigidbody.acc + steering;
+            }
+
+            // Arrive behavior
+            if (arriveMode)
+            {
+                Vector2 desiredVel = targetPosition - fish.rigidbody.pos;
+                float distance = Length(desiredVel);
+                float slowRadius = 100.0f;
+                float arriveRadius = 25.0f;
+
+                if (distance > slowRadius)
+                {
+                    desiredVel = Normalize(desiredVel) * fish.maxSpeed;
+                }
+                else if (distance > arriveRadius)
+                {
+                    float t = distance / slowRadius;
+                    desiredVel = Normalize(desiredVel) * fish.maxSpeed * t;
+                }
+                else
+                {
+                    desiredVel = { 0, 0 };
+                }
+
+                Vector2 steering = desiredVel - fish.rigidbody.vel;
+                fish.rigidbody.acc = fish.rigidbody.acc + steering;
+            }
+
+            // Obstacle avoidance behavior
+            if (avoidMode)
+            {
+                for (const Obstacle& obstacle : obstacles)
+                {
+                    Vector2 desiredVel = fish.rigidbody.pos - obstacle.position;
+                    float distance = Length(desiredVel);
+                    float avoidRadius = 50.0f;
+
+                    if (distance < avoidRadius)
+                    {
+                        desiredVel = Normalize(desiredVel) * fish.maxSpeed;
+                        Vector2 steering = desiredVel - fish.rigidbody.vel;
+                        fish.rigidbody.acc = fish.rigidbody.acc + steering;
+                    }
+                }
+            }
+
+            // Update fish
+            fish.Update(deltaTime);
+
+            // Wrap around screen
+            if (fish.rigidbody.pos.x > screenWidth)
+                fish.rigidbody.pos.x = 0;
+            else if (fish.rigidbody.pos.x < 0)
+                fish.rigidbody.pos.x = screenWidth;
+
+            if (fish.rigidbody.pos.y > screenHeight)
+                fish.rigidbody.pos.y = 0;
+            else if (fish.rigidbody.pos.y < 0)
+                fish.rigidbody.pos.y = screenHeight;
         }
-        else if (IsKeyPressed(KEY_ONE))  // 1 key
+
+        DrawTexture(sea, 0, 0, RAYWHITE);
+
+        // Draw
+        for (const Fish& fish : fishies)
         {
-            mode = 1;
+            fish.Draw();
         }
-        else if (IsKeyPressed(KEY_TWO))  // 2 key
+
+        // Draw target
+        if (seekMode || arriveMode)
         {
-            mode = 2;
+            DrawCircle(targetPosition.x, targetPosition.y, 5, GREEN);
         }
-        else if (IsKeyPressed(KEY_THREE))  // 3 key
+
+        // Draw obstacles
+        if (avoidMode)
         {
-            mode = 3;
-        }
-        else if (IsKeyPressed(KEY_FOUR))  // 4 key
-        {
-            mode = 4;
+            for (const Obstacle& obstacle : obstacles)
+            {
+                DrawCircle(obstacle.position.x, obstacle.position.y, obstacle.radius, RED);
+            }
         }
 
         EndDrawing();
     }
 
-    // Unload resources
-    UnloadTexture(background);
-    for (const Fish& agent : fishies)
-    {
-        UnloadTexture(agent.texture);
-    }
-
+    UnloadTexture(fishTexture);
     CloseWindow();
+
     return 0;
 }
