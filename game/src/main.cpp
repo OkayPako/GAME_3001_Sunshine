@@ -276,10 +276,13 @@ int main()
                 DrawCircle(obstacle.position.x, obstacle.position.y, obstacle.radius, RED);
             }
         }
+        DrawText("Press 1 for Seek ", 20, 20, 15, RED);
+        DrawText("Press 2 for Flee ", 20, 40, 15, RED);
+        DrawText("Press 3 for Arrive ", 20, 60, 15, RED);
+        DrawText("Press 4 for Obsticle Avoidance ", 20, 80, 15, RED);
 
         EndDrawing();
     }
-
     UnloadTexture(fishTexture);
     CloseWindow();
 
