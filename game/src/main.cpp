@@ -7,6 +7,11 @@
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
 
+bool CheckCollisionLineCircle(Vector2 lineStart, Vector2 lineEnd, Vector2 circlePosition, float circleRadius)
+{
+    Vector2 nearest = NearestPoint(lineStart, lineEnd, circlePosition);
+    return DistanceSqr(nearest, circlePosition) <= circleRadius * circleRadius;
+}
 struct Rigidbody
 {
     Vector2 pos{};          // Position
@@ -35,6 +40,8 @@ public:
     float height;
     float maxSpeed;
     float maxAcceleration;
+    float lineLength;
+    float radius;
 
     Fish(const Vector2& position, const Texture2D& texture, float width, float height, float speed, float acceleration)
         : maxSpeed(speed)
@@ -49,6 +56,13 @@ public:
         rigidbody.angularSpeed = 0.0f; // Initial angular speed
     }
 
+    Fish(float startX, float startY, float angularSpeed, float lineLength, float radius)
+        : lineLength(lineLength), radius(radius)
+    {
+        rigidbody.pos = { startX, startY };
+        rigidbody.dir = { 0.0, 1.0 };
+        rigidbody.angularSpeed = angularSpeed;
+    }
 
     void Update(float deltaTime)
     {
@@ -108,7 +122,38 @@ public:
             rigidbody.vel.y = 0;
         }
     }
+    void ObstacleAvoidance(const Vector2& obstaclePosition, float obstacleRadius, float avoidanceForce, float deltatime)
+    {
+        Vector2 right = Rotate(rigidbody.dir, 30 * DEG2RAD);
+        Vector2 left = Rotate(rigidbody.dir, -30 * DEG2RAD);
+        Vector2 rightWisk = rigidbody.pos + right * lineLength;
+        Vector2 leftWisk = rigidbody.pos + left * lineLength;
 
+
+        bool leftCollision = CheckCollisionLineCircle(rigidbody.pos, leftWisk, obstaclePosition, obstacleRadius);
+        bool rightCollision = CheckCollisionLineCircle(rigidbody.pos, rightWisk, obstaclePosition, obstacleRadius);
+
+        if (leftCollision || rightCollision)
+        {
+            Vector2 avoidanceDir = Normalize(rigidbody.pos - obstaclePosition);
+            rigidbody.acc = rigidbody.acc + avoidanceDir * avoidanceForce;
+        }
+
+        if (leftCollision)
+        {
+            Vector2 linearDirection = Normalize(rigidbody.vel);
+            float linearSpeed = Length(rigidbody.vel);
+            rigidbody.vel = Rotate(linearDirection, rigidbody.angularSpeed * deltatime * DEG2RAD) * linearSpeed;
+        }
+
+        if (rightCollision)
+        {
+            Vector2 linearDirection = Normalize(rigidbody.vel);
+            float linearSpeed = Length(rigidbody.vel);
+            rigidbody.vel = Rotate(linearDirection, -rigidbody.angularSpeed * deltatime * DEG2RAD) * linearSpeed;
+        }
+
+    }
     void Draw() const
     {
         Rectangle sourceRect = { 0, 0, (float)texture.width, (float)texture.height };
@@ -146,11 +191,7 @@ Vector2 Flee(const Vector2& target, const Fish& fish, float maxSpeed)
 }
 
 // Checks if a line segment intersects with a obstacle, which is used later to detect collisions between the seeker and an obstacle.
-bool CheckCollisionLineCircle(Vector2 lineStart, Vector2 lineEnd, Vector2 circlePosition, float circleRadius)
-{
-    Vector2 nearest = NearestPoint(lineStart, lineEnd, circlePosition);
-    return DistanceSqr(nearest, circlePosition) <= circleRadius * circleRadius;
-}
+
 
 int main(void)
 {
