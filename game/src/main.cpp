@@ -17,6 +17,15 @@ struct Rigidbody
     float angularSpeed;     // Angular speed (in degrees per second)
 };
 
+void Integrate(Rigidbody& rb, float dt)
+{
+    rb.vel = rb.vel + rb.acc * dt;
+    rb.pos = rb.pos + rb.vel * dt + rb.acc * dt * dt * 0.5;
+    rb.dir = RotateTowards(rb.dir, Normalize(rb.vel), rb.angularSpeed * dt);
+}
+
+
+
 class Fish
 {
 public:

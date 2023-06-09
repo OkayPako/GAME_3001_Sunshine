@@ -1,5 +1,6 @@
 #pragma once
 #include <corecrt_math.h>
+#include <cstdlib>
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
@@ -94,6 +95,12 @@ typedef struct float16 {
 //----------------------------------------------------------------------------------
 // Module Functions Definition - Utils math
 //----------------------------------------------------------------------------------
+
+// Random value between min and max (can be negative)
+RMAPI inline float Random(float min, float max)
+{
+    return min + (rand() / ((float)RAND_MAX / (max - min)));
+}
 
 // Clamp float value
 RMAPI float Clamp(float value, float min, float max)
@@ -230,6 +237,13 @@ RMAPI float Dot(Vector2 v1, Vector2 v2)
     return result;
 }
 
+RMAPI float Cross(Vector2 v1, Vector2 v2)
+{
+    float result = v1.x * v2.y - v1.y * v2.x;
+
+    return result;
+}
+
 // Calculate distance between two vectors
 RMAPI float Distance(Vector2 v1, Vector2 v2)
 {
@@ -242,6 +256,13 @@ RMAPI float Distance(Vector2 v1, Vector2 v2)
 RMAPI float DistanceSqr(Vector2 v1, Vector2 v2)
 {
     float result = ((v1.x - v2.x) * (v1.x - v2.x) + (v1.y - v2.y) * (v1.y - v2.y));
+
+    return result;
+}
+
+RMAPI float Sign(float value)
+{
+    float result = (value < 0.0f) ? -1.0f : 1.0f;
 
     return result;
 }
@@ -277,6 +298,15 @@ RMAPI float LineAngle(Vector2 start, Vector2 end)
     result = acosf(dotClamp);
 
     return result;
+}
+
+// Angle between two normalized vectors as you'd imagine it... 
+// Angle and LineAngle are silly
+RMAPI float SignedAngle(Vector2 from, Vector2 to)
+{
+    float angle = LineAngle(from, to);
+    float sign = (from.x * to.y - from.y * to.x) < 0.0f ? -1.0f : 1.0f;
+    return angle * sign;
 }
 
 // Scale vector (multiply by value)
@@ -412,6 +442,13 @@ RMAPI Vector2 MoveTowards(Vector2 v, Vector2 target, float maxDistance)
     result.y = v.y + dy / dist * maxDistance;
 
     return result;
+}
+
+// Rotate max radians towards the target
+RMAPI Vector2 RotateTowards(Vector2 from, Vector2 to, float maxRadians)
+{
+    float deltaRadians = LineAngle(from, to);
+    return Rotate(from, fminf(deltaRadians, maxRadians) * Sign(Cross(from, to)));
 }
 
 // Invert the given vector
