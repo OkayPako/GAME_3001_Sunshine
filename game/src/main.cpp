@@ -1,5 +1,5 @@
-//Brandon Quach-101191483
-//Raphael Flores-101139370
+//Brandon Quach - 101191483
+//Raphael Flores - 101139370
 
 #include "raylib.h"
 #include "Math.h"
