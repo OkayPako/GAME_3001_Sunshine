@@ -335,6 +335,7 @@ int main()
         DrawText("Press 2 for Flee ", 20, 40, 15, RED);
         DrawText("Press 3 for Arrive ", 20, 60, 15, RED);
         DrawText("Press 4 for Obsticle Avoidance ", 20, 80, 15, RED);
+        DrawText("Press Spacebar to reset ", 20, 100, 15, RED);
 
         EndDrawing();
     }
