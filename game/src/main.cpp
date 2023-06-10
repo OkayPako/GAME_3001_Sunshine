@@ -202,7 +202,7 @@ int main()
             {
                 Food food;
                 food.position = GetMousePosition();
-                food.radius = 5;
+                food.radius = 10;
                 foods.push_back(food);
 
             }
@@ -257,6 +257,18 @@ int main()
 
                     Vector2 steering = desiredVel - fish.rigidbody.vel;
                     fish.rigidbody.acc = fish.rigidbody.acc + steering;
+
+                    // Collision check between fish and foods
+                    for (auto it = foods.begin(); it != foods.end(); ++it)
+                    {
+                        const Food& food = *it;
+                        if (CheckCollisionCircleRec(fish.rigidbody.pos, fish.width * 0.5f, { food.position.x - food.radius, food.position.y - food.radius, food.radius * 2, food.radius * 2 }))
+                        {
+                            // Fish touched the food, remove it
+                            foods.erase(it);
+                            break;
+                        }
+                    }
                 }
 
 
@@ -325,7 +337,7 @@ int main()
             }
         }
 
-        if ( arriveMode)
+        if (arriveMode)
         { 
             for (const Food& food : foods)
             {
