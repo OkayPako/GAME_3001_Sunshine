@@ -176,7 +176,7 @@ int main()
             {
                 Obstacle obstacle;
                 obstacle.position = GetMousePosition();
-                obstacle.radius = 32.0f;
+                obstacle.radius = 10;
                 obstacles.push_back(obstacle);
             }
         }
@@ -249,6 +249,14 @@ int main()
             // Obstacle avoidance behavior
             if (avoidMode)
             {
+                targetPosition = GetMousePosition();
+                Vector2 desiredVel = targetPosition - fish.rigidbody.pos;
+                desiredVel = Normalize(desiredVel) * fish.maxSpeed;
+                Vector2 steering = desiredVel - fish.rigidbody.vel;
+                fish.rigidbody.acc = fish.rigidbody.acc + steering;
+            
+
+
                 for (const Obstacle& obstacle : obstacles)
                 {
                     Vector2 desiredVel = fish.rigidbody.pos - obstacle.position;
