@@ -219,29 +219,33 @@ int main()
             // Arrive behavior
             if (arriveMode)
             {
-                Vector2 desiredVel = targetPosition - fish.rigidbody.pos;
-                float distance = Length(desiredVel);
-                float slowRadius = 100.0f;
-                float arriveRadius = 25.0f;
+                for (const Food& food : foods)
+                {
+                    Vector2 desiredVel = food.position - fish.rigidbody.pos;
+                    float distance = Length(desiredVel);
+                    float slowRadius = 100.0f;
+                    float arriveRadius = 25.0f;
 
-                if (distance > slowRadius)
-                {
-                    desiredVel = Normalize(desiredVel) * fish.maxSpeed;
-                }
-                else if (distance > arriveRadius)
-                {
-                    float t = distance / slowRadius;
-                    desiredVel = Normalize(desiredVel) * fish.maxSpeed * t;
-                }
-                else
-                {
-                    desiredVel = { 0, 0 };
+                    if (distance > slowRadius)
+                    {
+                        desiredVel = Normalize(desiredVel) * fish.maxSpeed;
+                    }
+                    else if (distance > arriveRadius)
+                    {
+                        float t = distance / slowRadius;
+                        desiredVel = Normalize(desiredVel) * fish.maxSpeed * t;
+                    }
+                    else
+                    {
+                        desiredVel = { 0, 0 };
+                    }
+
+                    Vector2 steering = desiredVel - fish.rigidbody.vel;
+                    fish.rigidbody.acc = fish.rigidbody.acc + steering;
                 }
 
-                Vector2 steering = desiredVel - fish.rigidbody.vel;
-                fish.rigidbody.acc = fish.rigidbody.acc + steering;
+
             }
-
             // Obstacle avoidance behavior
             if (avoidMode)
             {
