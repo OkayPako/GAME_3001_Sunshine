@@ -18,6 +18,12 @@ struct Obstacle
     float radius{};
 };
 
+struct Food
+{
+    Vector2 position{};
+    float radius{};
+};
+
 class Fish
 {
 public:
@@ -94,8 +100,8 @@ bool CheckCollisionLineCircle(Vector2 lineStart, Vector2 lineEnd, Vector2 circle
 
 int main()
 {
-    const int screenWidth = 1920;
-    const int screenHeight = 1080;
+    const int screenWidth = 1900;
+    const int screenHeight = 1000;
 
     InitWindow(screenWidth, screenHeight, "Fish Behaviors");
     SetTargetFPS(60);
@@ -109,6 +115,8 @@ int main()
     fishies.push_back(Fish({ 300, 400 }, fishTexture, 50, 50, 250.0f, 500.0f));
 
     std::vector<Obstacle> obstacles;
+
+    std::vector<Food> foods;
 
     Vector2 targetPosition{};
     bool seekMode = false;
@@ -154,13 +162,16 @@ int main()
             avoidMode = true;
         }
 
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+        if (IsMouseButtonUp(MOUSE_LEFT_BUTTON))
         {
             if (seekMode)
             {
                 targetPosition = GetMousePosition();
             }
         }
+
+
+
 
         if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
         {
@@ -172,6 +183,19 @@ int main()
                 obstacles.push_back(obstacle);
             }
         }
+
+        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+        {
+            if (arriveMode)
+            {
+                Food food;
+                food.position = GetMousePosition();
+                food.radius = 5;
+                foods.push_back(food);
+
+            }
+        }
+
 
         // Behaviors
         for (Fish& fish : fishies)
@@ -263,9 +287,9 @@ int main()
         }
 
         // Draw target
-        if (seekMode || arriveMode)
+        if (seekMode )
         {
-            DrawCircle(targetPosition.x, targetPosition.y, 5, GREEN);
+            DrawCircleV(GetMousePosition(), 5, GREEN);
         }
 
         // Draw obstacles
@@ -276,6 +300,19 @@ int main()
                 DrawCircle(obstacle.position.x, obstacle.position.y, obstacle.radius, RED);
             }
         }
+
+        if ( arriveMode)
+        { 
+            for (const Food& food : foods)
+            {
+                DrawCircle(food.position.x, food.position.y, food.radius, ORANGE);
+            }
+        
+        }
+
+
+
+
         DrawText("Press 1 for Seek ", 20, 20, 15, RED);
         DrawText("Press 2 for Flee ", 20, 40, 15, RED);
         DrawText("Press 3 for Arrive ", 20, 60, 15, RED);
