@@ -133,6 +133,18 @@ int main()
         float deltaTime = GetFrameTime();
 
         // Handle input
+        if (IsKeyPressed(KEY_SPACE))
+        {
+            // Reset the simulation
+            fishies.clear();
+            fishies.push_back(Fish({ 100, 200 }, fishTexture, 50, 50, 150.0f, 300.0f));
+            fishies.push_back(Fish({ 200, 300 }, fishTexture, 50, 50, 200.0f, 400.0f));
+            fishies.push_back(Fish({ 300, 400 }, fishTexture, 50, 50, 250.0f, 500.0f));
+            seekMode = false;
+            fleeMode = false;
+            arriveMode = false;
+            avoidMode = false;
+        }
         if (IsKeyPressed(KEY_ONE))
         {
             seekMode = true;
@@ -318,9 +330,6 @@ int main()
             }
         
         }
-
-
-
 
         DrawText("Press 1 for Seek ", 20, 20, 15, RED);
         DrawText("Press 2 for Flee ", 20, 40, 15, RED);
