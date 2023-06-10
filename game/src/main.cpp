@@ -170,9 +170,6 @@ int main()
             }
         }
 
-
-
-
         if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
         {
             if (avoidMode)
