@@ -24,14 +24,22 @@ public:
     float tileSizeX = 64; // width of a tile in pixels
     float tileSizeY = 64; // height of a tile in pixels
 
-    TileCoord playerPosition;  // New player position variable
+    TileCoord playerPosition;
+    Texture2D playerTexture;
+    Rectangle playerRect;
+    int frameWidth = 64; 
+    int frameHeight = 64;
+    float frameTime; 
+    float elapsedTime;
 
     Color tileColors[(int)Tile::count];
 
     Tile tiles[MAP_WIDTH][MAP_HEIGHT];
 
-    Tilemap()
+    Tilemap(Texture2D playerTexture)
     {
+        this->playerTexture = playerTexture;
+
         tileColors[(int)Tile::floor] = BEIGE;
         tileColors[(int)Tile::grass] = GREEN;
         tileColors[(int)Tile::water] = SKYBLUE;
@@ -41,6 +49,14 @@ public:
         isTranversable[(int)Tile::grass] = true;
         isTranversable[(int)Tile::water] = false;
         isTranversable[(int)Tile::wall] = false;
+
+        frameWidth = playerTexture.width / 4;
+        frameHeight = playerTexture.height;
+        frameTime = 0.2f;
+        elapsedTime = 0.0f;
+
+        // Initialize the player rectangle at position (0, 0) with the frame size
+        playerRect = { 0, 0, static_cast<float>(frameWidth), static_cast<float>(frameHeight) };
     }
 
     Vector2 GetScreenPositionOfTile(TileCoord coordinate)
@@ -110,6 +126,21 @@ public:
         }
     }
 
+    void Update(float deltaTime)
+    {
+        elapsedTime += deltaTime;
+        if (elapsedTime >= frameTime)
+        {
+            playerRect.x += frameWidth;
+            if (playerRect.x >= playerTexture.width)
+            {
+                playerRect.x = 0;
+            }
+
+            elapsedTime = 0.0f;
+        }
+    }
+
     void Draw()
     {
         for (int x = 0; x < MAP_WIDTH; x++)
@@ -123,8 +154,16 @@ public:
 
 
                 // Draw the player sprite with the current frame
-                Vector2 playerScreenPosition = GetScreenPositionOfTile(playerPosition);
-                DrawRectangle(static_cast<int>(playerScreenPosition.x), static_cast<int>(playerScreenPosition.y), tileSizeX, tileSizeY, RED);
+                // Vector2 playerScreenPosition = GetScreenPositionOfTile(playerPosition);
+                // DrawRectangle(static_cast<int>(playerScreenPosition.x), static_cast<int>(playerScreenPosition.y), tileSizeX, tileSizeY, RED);
+
+                // Draw the player sprite
+                if (x == playerPosition.x && y == playerPosition.y)
+                {
+                    Vector2 playerScreenPosition = GetScreenPositionOfTile(playerPosition);
+                    Rectangle destRect = { playerScreenPosition.x, playerScreenPosition.y, frameWidth, frameHeight };
+                    DrawTextureRec(playerTexture, playerRect, playerScreenPosition, WHITE);
+                }
             }
         }
 

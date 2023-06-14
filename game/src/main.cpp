@@ -5,24 +5,33 @@
 
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 768
-
-Tilemap map;
+#define PLAYER_SIZE 64
 
 int main(void)
 {
     srand(time(NULL));
-    map.Randomize();
+
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Randomize Maps");
     rlImGuiSetup(true);
+
+    // Player
+    Texture2D playerTexture = LoadTexture("../game/assets/textures/Biker_idle.png");
+    Tilemap map(playerTexture);
+
+    map.Randomize();
 
     bool useGUI = false;
     SetTargetFPS(60);
 
     while (!WindowShouldClose())
     {
-        map.Draw();
+        float deltaTime = GetFrameTime();
+
         BeginDrawing();
         ClearBackground(RAYWHITE);
+
+        map.Update(deltaTime);
+        map.Draw();
 
         // Player movement
         if (IsKeyPressed(KEY_W) && map.isTileTraversable(map.playerPosition - TileCoord(0, 1)))
@@ -99,7 +108,7 @@ int main(void)
                             DrawLineEx(tileCenter, adjacentTileCenter, 2, DARKGREEN);
                         }
 
-                        DrawCircle(static_cast<int>(tileCenter.x), static_cast<int>(tileCenter.y), 8, RED);
+                        DrawCircle(static_cast<int>(tileCenter.x), static_cast<int>(tileCenter.y), 8, DARKGREEN);
                     }
                 }
             }
@@ -140,7 +149,9 @@ int main(void)
         //    }
         //}
 
-        DrawText("Tile Map!", 20, 10, 20, RAYWHITE);
+        DrawRectangle( 10, 10, 310, 20, BLACK);
+        DrawText("PRESS ~ TO OPEN THE GPS :)", 10, 10, 20, RAYWHITE);
+
         EndDrawing();
     }
 
