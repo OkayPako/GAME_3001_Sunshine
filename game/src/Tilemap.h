@@ -121,10 +121,12 @@ public:
 
                 DrawRectangle(x * tileSizeX, y * tileSizeY, tileSizeX, tileSizeY, tileColor);
 
-                // Draw player sprite
+
+                // Draw the player sprite with the current frame
                 Vector2 playerScreenPosition = GetScreenPositionOfTile(playerPosition);
                 DrawRectangle(static_cast<int>(playerScreenPosition.x), static_cast<int>(playerScreenPosition.y), tileSizeX, tileSizeY, RED);
             }
         }
+
     }
 };

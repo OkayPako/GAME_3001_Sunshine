@@ -12,7 +12,7 @@ int main(void)
 {
     srand(time(NULL));
     map.Randomize();
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Sunshine");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Randomize Maps");
     rlImGuiSetup(true);
 
     bool useGUI = false;
