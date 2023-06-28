@@ -62,12 +62,10 @@ int main(void)
 
             if (ImGui::Checkbox("Draw Information", &showInfo))
             {
-                map.DrawInformationOnTiles();
             }
 
             if (ImGui::Checkbox("Show GPS", &showGPS))
             {
-                map.DrawGPS(map);
             }
 
             if (ImGui::Button("Randomize Map"))
@@ -78,18 +76,18 @@ int main(void)
             rlImGuiEnd();
         }
 
-        //if (showInfo)
-        //{
-        //    
-        //}
+        if (showInfo)
+        {
+            map.DrawInformationOnTiles();
+        }
 
-        //if (showGPS)
-        //{
-        //    
-        //}
+        if (showGPS)
+        {
+            map.DrawGPS(map);
+        }
 
         DrawRectangle( 10, 10, 310, 20, BLACK);
-        DrawText("PRESS ~ TO OPEN THE GPS :)", 10, 10, 20, RAYWHITE);
+        DrawText("PRESS ~ TO OPEN THE MENU :)", 10, 10, 20, RAYWHITE);
 
         EndDrawing();
     }
