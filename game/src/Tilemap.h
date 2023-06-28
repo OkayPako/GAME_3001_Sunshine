@@ -131,6 +131,23 @@ public:
         return allTiles;
     }
 
+    std::vector<TileCoord> GetAllTraversableTiles()
+    {
+        std::vector<TileCoord> traversableTiles;
+        for (int x = 0; x < MAP_WIDTH; x++)
+        {
+            for (int y = 0; y < MAP_HEIGHT; y++)
+            {
+                TileCoord coordinate(x, y);
+                if (IsTileTraversable(coordinate))
+                {
+                    traversableTiles.push_back(coordinate);
+                }
+            }
+        }
+        return traversableTiles;
+    }
+
     std::vector<TileCoord> GetConnectedTraversableTiles(TileCoord coordinate)
     {
         std::vector<TileCoord> connectedTiles;
