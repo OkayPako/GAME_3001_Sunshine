@@ -4,10 +4,10 @@
 
 class Pathfinder
 {
-public:
+private:
 	Tilemap* map = nullptr;
 
-private:
+public:
 	std::unordered_map<TileCoord, float, std::hash<TileCoord>, std::equal_to<TileCoord>> unvisited;
 
 	std::unordered_map<TileCoord, float, std::hash<TileCoord>, std::equal_to<TileCoord>> visited;
@@ -109,5 +109,4 @@ private:
 		}
 		return IsSolved();
 	}
-
 };

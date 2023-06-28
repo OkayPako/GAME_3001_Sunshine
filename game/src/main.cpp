@@ -18,6 +18,7 @@ int main(void)
     // Player
     Texture2D playerTexture = LoadTexture("../game/assets/textures/Biker_idle.png");
     Tilemap map(playerTexture);
+    Pathfinder pathfinder;
 
     map.Randomize();
 
@@ -39,6 +40,7 @@ int main(void)
         map.Draw();
         map.DrawPlayer();
         map.DrawBorders();
+        map.DrawPathfinderVisualization(pathfinder);
 
         // Player movement
         if (IsKeyPressed(KEY_W) && map.IsTileTraversable(map.playerPosition - TileCoord(0, 1)))
