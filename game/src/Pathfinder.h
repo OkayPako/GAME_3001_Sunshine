@@ -36,8 +36,6 @@ public:
 	{
 		visited.clear();
 		cheapestEdgeTo.clear();
-
-		// Reset costs
 		unvisited.clear();
 
 		for (TileCoord position : map->GetAllTraversableTiles())
@@ -45,6 +43,11 @@ public:
 			unvisited[position] = INFINITY;
 		}
 		unvisited[startNode] = 0;
+	}
+
+	void SetEndNode(TileCoord endTile)
+	{
+		goalNode = endTile;
 	}
 
 	std::pair<TileCoord, float> GetLowestCostIn(std::unordered_map<TileCoord, float> set)

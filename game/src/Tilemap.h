@@ -282,53 +282,7 @@ public:
                 }
             }
         }
-    }
-
-    void Tilemap::DrawPathfinderVisualization(Pathfinder& pathfinder)
-    {
-        // Draw the start node in green
-        Vector2 startNodePos = GetScreenPositionOfTile(pathfinder.startNode);
-        DrawRectangle(static_cast<int>(startNodePos.x), static_cast<int>(startNodePos.y), static_cast<int>(tileSizeX), static_cast<int>(tileSizeY), GREEN);
-
-        // Draw the goal node in red
-        Vector2 goalNodePos = GetScreenPositionOfTile(pathfinder.goalNode);
-        DrawRectangle(static_cast<int>(goalNodePos.x), static_cast<int>(goalNodePos.y), static_cast<int>(tileSizeX), static_cast<int>(tileSizeY), RED);
-
-        // Draw the current node in blue
-        Vector2 currentNodePos = GetScreenPositionOfTile(pathfinder.currentNode);
-        DrawRectangle(static_cast<int>(currentNodePos.x), static_cast<int>(currentNodePos.y), static_cast<int>(tileSizeX), static_cast<int>(tileSizeY), BLUE);
-
-        // Draw nodes in the unvisited set with cost-to-reach written in gray
-        for (const auto& node : pathfinder.unvisited)
-        {
-            Vector2 nodePos = GetScreenPositionOfTile(node.first);
-            DrawRectangle(static_cast<int>(nodePos.x), static_cast<int>(nodePos.y), static_cast<int>(tileSizeX), static_cast<int>(tileSizeY), GRAY);
-
-            std::stringstream ss;
-            ss << static_cast<int>(node.second);
-            DrawText(ss.str().c_str(), static_cast<int>(nodePos.x), static_cast<int>(nodePos.y), 10, BLACK);
-        }
-
-        // Draw nodes in the visited set with cost-to-reach written in green
-        for (const auto& node : pathfinder.visited)
-        {
-            Vector2 nodePos = GetScreenPositionOfTile(node.first);
-            DrawRectangle(static_cast<int>(nodePos.x), static_cast<int>(nodePos.y), static_cast<int>(tileSizeX), static_cast<int>(tileSizeY), GREEN);
-
-            std::stringstream ss;
-            ss << static_cast<int>(node.second);
-            DrawText(ss.str().c_str(), static_cast<int>(nodePos.x), static_cast<int>(nodePos.y), 10, BLACK);
-        }
-
-        // Draw a line in green from each node to its previous node
-        for (const auto& node : pathfinder.cheapestEdgeTo)
-        {
-            Vector2 nodePos = GetScreenPositionOfTile(node.first);
-            Vector2 prevNodePos = GetScreenPositionOfTile(node.second);
-            DrawLine(static_cast<int>(nodePos.x + tileSizeX / 2), static_cast<int>(nodePos.y + tileSizeY / 2),
-                static_cast<int>(prevNodePos.x + tileSizeX / 2), static_cast<int>(prevNodePos.y + tileSizeY / 2), GREEN);
-        }
-    }
+    } 
 
     void Randomize(int chanceOfFloor = 50)
     {
@@ -424,6 +378,11 @@ public:
     void SetShowInfo(bool showInfo)
     {
         this->showInfo = showInfo;
+    }
+
+    void SetPlayerDestination(TileCoord destination)
+    {
+        playerPosition = destination;
     }
 
     void DrawPlayer()

@@ -1,6 +1,7 @@
 #include "rlImGui.h"
-#include "Tilemap.h"
 #include "raylib.h"
+#include "TileCoord.h"
+#include "Tilemap.h"
 #include "Pathfinder.h"
 #include <time.h>
 
@@ -18,7 +19,9 @@ int main(void)
     // Player
     Texture2D playerTexture = LoadTexture("../game/assets/textures/Biker_idle.png");
     Tilemap map(playerTexture);
-    Pathfinder pathfinder;
+    
+    Pathfinder pathfinder(&map, { 1, 1 }, { 18, 10 });
+    bool isPathSolved = pathfinder.SolvePath();
 
     map.Randomize();
 
@@ -40,7 +43,6 @@ int main(void)
         map.Draw();
         map.DrawPlayer();
         map.DrawBorders();
-        map.DrawPathfinderVisualization(pathfinder);
 
         // Player movement
         if (IsKeyPressed(KEY_W) && map.IsTileTraversable(map.playerPosition - TileCoord(0, 1)))
@@ -51,6 +53,18 @@ int main(void)
             map.playerPosition -= TileCoord(1, 0);
         if (IsKeyPressed(KEY_D) && map.IsTileTraversable(map.playerPosition + TileCoord(1, 0)))
             map.playerPosition += TileCoord(1, 0);
+
+        // Set end node with left mouse button
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+        {
+            TileCoord mouseTile = map.GetTileAtScreenPosition(GetMousePosition());
+            if (map.IsTileTraversable(mouseTile))
+            {
+                pathfinder.SetEndNode(mouseTile);
+                isPathSolved = pathfinder.SolvePath();
+                map.SetPlayerDestination(mouseTile);
+            }
+        }
 
         if (IsKeyPressed(KEY_GRAVE)) useGUI = !useGUI;
         if (useGUI)
@@ -86,6 +100,23 @@ int main(void)
         if (showGPS)
         {
             map.DrawGPS(map);
+        }
+
+        // Draw the solution path in blue
+        if (isPathSolved)
+        {
+            TileCoord currentNode = pathfinder.goalNode;
+
+            while (currentNode != pathfinder.startNode)
+            {
+                Vector2 nodePos = map.GetScreenPositionOfTile(currentNode);
+
+                // Draw blue rectangle to represent the solution path
+                DrawRectangle(static_cast<int>(nodePos.x), static_cast<int>(nodePos.y), static_cast<int>(map.tileSizeX), static_cast<int>(map.tileSizeY), BLUE);
+
+                // Update current node to the previous node in the path
+                currentNode = pathfinder.cheapestEdgeTo[currentNode];
+            }
         }
 
         DrawRectangle( 10, 10, 310, 20, BLACK);
