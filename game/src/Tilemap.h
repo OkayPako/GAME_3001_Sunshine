@@ -296,11 +296,11 @@ public:
                 {
                     tiles[x][y] = Tile::floor;
                 }
-                else if (randNum < chanceOfFloor + 5)
+                else if (randNum < chanceOfFloor + 10)
                 {
                     tiles[x][y] = Tile::water;
                 }
-                else if (randNum < chanceOfFloor + 10)
+                else if (randNum < chanceOfFloor + 20)
                 {
                     tiles[x][y] = Tile::grass;
                 }
