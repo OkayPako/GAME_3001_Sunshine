@@ -97,6 +97,11 @@ public:
 
     bool IsTileTraversable(TileCoord coordinate)
     {
+        if (coordinate == playerPosition)
+        {
+            return false; // Player is occupying this tile, so it's not traversable
+        }
+
         if (coordinate.x >= 0 && coordinate.x < MAP_WIDTH && coordinate.y >= 0 && coordinate.y < MAP_HEIGHT)
         {
             Tile tileType = tiles[coordinate.x][coordinate.y];
@@ -254,7 +259,7 @@ public:
         }
     }
 
-    void DrawInformationOnTiles()
+    void DrawTileInfo()
     {
         for (int x = 0; x < MAP_WIDTH; x++)
         {
@@ -266,23 +271,53 @@ public:
                 switch (tileType)
                 {
                 case Tile::floor:
-                    DrawText("Floor", x * tileSizeX + 10, y * tileSizeY + 10, 10, RAYWHITE);
+                    DrawText("Floor", x * tileSizeX + 35, y * tileSizeY + 5, 10, RAYWHITE);
                     break;
                 case Tile::grass:
-                    DrawText("Grass", x * tileSizeX + 10, y * tileSizeY + 10, 10, RAYWHITE);
+                    DrawText("Grass", x * tileSizeX + 35, y * tileSizeY + 5, 10, RAYWHITE);
                     break;
                 case Tile::water:
-                    DrawText("Water", x * tileSizeX + 10, y * tileSizeY + 10, 10, RAYWHITE);
+                    DrawText("Water", x * tileSizeX + 35, y * tileSizeY + 5, 10, RAYWHITE);
                     break;
                 case Tile::wall:
-                    DrawText("Wall", x * tileSizeX + 10, y * tileSizeY + 10, 10, RAYWHITE);
+                    DrawText("Wall", x * tileSizeX + 35, y * tileSizeY + 5, 10, RAYWHITE);
                     break;
                 default:
                     break;
                 }
             }
         }
-    } 
+
+        // Draw rectangles surrounding the player's position
+        for (float i = playerPosition.x - 2; i <= playerPosition.x + 2; i++)
+        {
+            for (float j = playerPosition.y - 2; j <= playerPosition.y + 2; j++)
+            {
+                if (i >= 0 && i < MAP_WIDTH && j >= 0 && j < MAP_HEIGHT)
+                {
+                    Vector2 position = GetScreenPositionOfTile({ i, j });
+                    DrawRectangleLines(static_cast<int>(position.x), static_cast<int>(position.y), tileSizeX, tileSizeY, (IsTileTraversable({ i, j }) ? RED : GREEN));
+
+                    int cost = CalculateTileCost(playerPosition, { i, j });
+                    std::stringstream costText;
+                    costText << cost;
+                    DrawText(costText.str().c_str(), static_cast<int>(position.x) + 5, static_cast<int>(position.y) + 5, 10, WHITE);
+                }
+            }
+        }
+    }
+
+    int CalculateTileCost(const TileCoord& start, const Vector2& destination)
+    {
+        // Calculate the Manhattan distance between the start and destination positions
+        int distanceX = abs(destination.x - start.x);
+        int distanceY = abs(destination.y - start.y);
+
+        // Adjust the cost based on the distance (example: multiply by a factor)
+        int cost = (distanceX + distanceY);
+
+        return cost;
+    }
 
     void Randomize(int chanceOfFloor = 50)
     {
@@ -390,5 +425,50 @@ public:
         Vector2 playerScreenPosition = GetScreenPositionOfTile(playerPosition);
         Rectangle destRect = { playerScreenPosition.x, playerScreenPosition.y, frameWidth, frameHeight };
         DrawTextureRec(playerTexture, playerRect, playerScreenPosition, WHITE);
+    }
+
+    void DrawStartNode(TileCoord startNode)
+    {
+        Vector2 position = GetScreenPositionOfTile(startNode);
+        DrawRectangle(static_cast<int>(position.x), static_cast<int>(position.y), tileSizeX, tileSizeY, GREEN);
+    }
+
+    void DrawGoalNode(TileCoord goalNode)
+    {
+        Vector2 position = GetScreenPositionOfTile(goalNode);
+        DrawRectangle(static_cast<int>(position.x), static_cast<int>(position.y), tileSizeX, tileSizeY, RED);
+    }
+
+    void DrawCurrentNode(TileCoord currentNode)
+    {
+        Vector2 position = GetScreenPositionOfTile(currentNode);
+        DrawRectangle(static_cast<int>(position.x), static_cast<int>(position.y), tileSizeX, tileSizeY, BLUE);
+    }
+
+    void DrawUnvisitedNode(TileCoord node, int cost)
+    {
+        Vector2 position = GetScreenPositionOfTile(node);
+        DrawRectangleLines(static_cast<int>(position.x), static_cast<int>(position.y), tileSizeX, tileSizeY, GRAY);
+
+        std::stringstream costText;
+        costText << cost;
+        DrawText(costText.str().c_str(), static_cast<int>(position.x) + 5, static_cast<int>(position.y) + 5, 10, BLACK);
+    }
+
+    void DrawVisitedNode(TileCoord node, int cost)
+    {
+        Vector2 position = GetScreenPositionOfTile(node);
+        DrawRectangleLines(static_cast<int>(position.x), static_cast<int>(position.y), tileSizeX, tileSizeY, GREEN);
+
+        std::stringstream costText;
+        costText << cost;
+        DrawText(costText.str().c_str(), static_cast<int>(position.x) + 5, static_cast<int>(position.y) + 5, 10, BLACK);
+    }
+
+    void DrawNodePath(TileCoord node, TileCoord previousNode)
+    {
+        Vector2 nodePosition = GetScreenPositionOfTile(node) + Vector2{ tileSizeX / 2, tileSizeY / 2 };
+        Vector2 previousNodePosition = GetScreenPositionOfTile(previousNode) + Vector2{ tileSizeX / 2, tileSizeY / 2 };
+        DrawLineEx(nodePosition, previousNodePosition, 2, GREEN);
     }
 };

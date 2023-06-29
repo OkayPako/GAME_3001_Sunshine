@@ -3,11 +3,20 @@
 #include "TileCoord.h"
 #include "Tilemap.h"
 #include "Pathfinder.h"
+#include "Math.h"
 #include <time.h>
+#include <queue>
 
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 768
 #define PLAYER_SIZE 64
+
+TileCoord LerpTileCoord(const TileCoord& start, const TileCoord& end, float t)
+{
+    float x = Lerp(start.x, end.x, t);
+    float y = Lerp(start.y, end.y, t);
+    return TileCoord(static_cast<int>(x), static_cast<int>(y));
+}
 
 int main(void)
 {
@@ -28,6 +37,17 @@ int main(void)
     bool showGPS = false;
 
     SetTargetFPS(60);
+
+    // Pathfinder stuff
+    Pathfinder pathfinder(&map, map.playerPosition, TileCoord());
+
+    pathfinder.startNode = map.playerPosition;
+    map.DrawStartNode(pathfinder.startNode);
+
+    Vector2 mousePosition = GetMousePosition();
+    TileCoord clickedTile = map.GetTileAtScreenPosition(mousePosition);
+    pathfinder.goalNode = clickedTile;
+    map.DrawGoalNode(clickedTile);
 
     while (!WindowShouldClose())
     {
@@ -51,6 +71,16 @@ int main(void)
         if (IsKeyPressed(KEY_D) && map.IsTileTraversable(map.playerPosition + TileCoord(1, 0)))
             map.playerPosition += TileCoord(1, 0);
 
+        // Secondary player movement with left mouse button
+        //if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+        //{
+        //    Vector2 mousePosition = GetMousePosition();
+        //    TileCoord clickedTile = map.GetTileAtScreenPosition(mousePosition);
+        //
+        //    if (map.IsTileTraversable(clickedTile))
+        //        map.playerPosition = clickedTile;
+        //}
+
         if (IsKeyPressed(KEY_GRAVE)) useGUI = !useGUI;
         if (useGUI)
         {
@@ -61,12 +91,14 @@ int main(void)
                 map.SetUseTextures(useTextures);
             }
 
-            if (ImGui::Checkbox("Draw Information", &showInfo))
+            if (ImGui::Checkbox("Draw Tile Information", &showInfo))
             {
+
             }
 
             if (ImGui::Checkbox("Show GPS", &showGPS))
             {
+
             }
 
             if (ImGui::Button("Randomize Map"))
@@ -79,7 +111,7 @@ int main(void)
 
         if (showInfo)
         {
-            map.DrawInformationOnTiles();
+            map.DrawTileInfo();
         }
 
         if (showGPS)

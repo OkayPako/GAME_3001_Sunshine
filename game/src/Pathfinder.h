@@ -1,6 +1,10 @@
 #pragma once
-#include "TileMap.h"
+#include "TileCoord.h"
+#include "Tilemap.h"
+#include <vector>
 #include <unordered_map>
+#include <queue>
+#include <limits>
 
 class Pathfinder
 {
@@ -9,9 +13,7 @@ private:
 
 public:
 	std::unordered_map<TileCoord, float, std::hash<TileCoord>, std::equal_to<TileCoord>> unvisited;
-
 	std::unordered_map<TileCoord, float, std::hash<TileCoord>, std::equal_to<TileCoord>> visited;
-
 	std::unordered_map<TileCoord, TileCoord, std::hash<TileCoord>, std::equal_to<TileCoord>> cheapestEdgeTo;
 
 	TileCoord startNode;
@@ -23,9 +25,9 @@ public:
 
 	};
 
-	Pathfinder(Tilemap* levelToNagivate, TileCoord startTile, TileCoord endTile)
+	Pathfinder(Tilemap* tilemap, TileCoord startTile, TileCoord endTile)
 	{
-		map = levelToNagivate;
+		map = tilemap;
 		startNode = startTile;
 		goalNode = endTile;
 		currentNode = startNode;
@@ -69,10 +71,13 @@ public:
 	}
 
 	bool IsVisited(TileCoord pos) const { return visited.count(pos); }
+
 	bool IsSolved() const { return IsVisited(goalNode); }
+
 	bool IsCompleted() { return IsVisited(goalNode) || GetLowestCostIn(unvisited).second == INFINITY; }
 
 	float GetTotalCostToReach(TileCoord pos) { return unvisited[pos]; }
+
 	void SetCostToReach(TileCoord pos, float newCost) { unvisited[pos] = newCost; }
 
 	void ProcessNextIterationFunctional()
@@ -101,6 +106,18 @@ public:
 	{
 		visited[currentNode] = unvisited[currentNode];
 		unvisited.erase(currentNode);
+	}
+
+	std::list<TileCoord> GetSolution()
+	{
+		std::list<TileCoord> solution;
+		auto currentNode = goalNode;
+		while (currentNode != startNode)
+		{
+			solution.push_front(currentNode);
+			currentNode = cheapestEdgeTo[currentNode];
+		}
+		return solution;
 	}
 
 	bool SolvePath() // Runs the full algorithm until completion and returns whether or not it was succesful
