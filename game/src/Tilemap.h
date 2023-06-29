@@ -296,7 +296,7 @@ public:
                 if (i >= 0 && i < MAP_WIDTH && j >= 0 && j < MAP_HEIGHT)
                 {
                     Vector2 position = GetScreenPositionOfTile({ i, j });
-                    DrawRectangleLines(static_cast<int>(position.x), static_cast<int>(position.y), tileSizeX, tileSizeY, (IsTileTraversable({ i, j }) ? RED : GREEN));
+                    DrawRectangleLines(static_cast<int>(position.x), static_cast<int>(position.y), tileSizeX, tileSizeY, (IsTileTraversable({ i, j }) ? GREEN : RED));
 
                     int cost = CalculateTileCost(playerPosition, { i, j });
                     std::stringstream costText;
