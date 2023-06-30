@@ -200,11 +200,6 @@ public:
         }
     }
 
-    // Draw connections between traversable tiles
-
-    // checks the traversability of the adjacent tiles individually in each cardinal direction (north, south, east, and west). 
-    // If an adjacent tile in any of these directions is traversable, it calculates the center position of the adjacent tile 
-    // and draws a line from the center of the current tile to the center of the adjacent tile
     void DrawGPS(Tilemap map)
     {
         for (int x = 0; x < MAP_WIDTH; x++)
@@ -259,6 +254,17 @@ public:
         }
     }
 
+    int CalculateTileCost(const TileCoord& start, const TileCoord& destination)
+    {
+
+        int distanceX = abs(destination.x - start.x);
+        int distanceY = abs(destination.y - start.y);
+
+        int cost = (distanceX + distanceY);
+
+        return cost;
+    }
+
     void DrawTileInfo()
     {
         for (int x = 0; x < MAP_WIDTH; x++)
@@ -307,16 +313,19 @@ public:
         }
     }
 
-    int CalculateTileCost(const TileCoord& start, const Vector2& destination)
+    void HandleRightClick(const Vector2& mousePosition)
     {
-        // Calculate the Manhattan distance between the start and destination positions
-        int distanceX = abs(destination.x - start.x);
-        int distanceY = abs(destination.y - start.y);
+        TileCoord clickedTile = GetTileAtScreenPosition(mousePosition);
 
-        // Adjust the cost based on the distance (example: multiply by a factor)
-        int cost = (distanceX + distanceY);
+        // Calculate and display the cost between the player and the clicked tile
+        Vector2 position = GetScreenPositionOfTile(clickedTile);
+        DrawRectangleLines(static_cast<int>(position.x), static_cast<int>(position.y), tileSizeX, tileSizeY, (IsTileTraversable({ clickedTile }) ? BLUE : RED));
 
-        return cost;
+        int cost = CalculateTileCost(playerPosition, clickedTile);
+        std::stringstream costText;
+        costText << cost;
+        DrawText(costText.str().c_str(), static_cast<int>(position.x) + 5, static_cast<int>(position.y) + 5, 10, WHITE);
+
     }
 
     void Randomize(int chanceOfFloor = 50)
